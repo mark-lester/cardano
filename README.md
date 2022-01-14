@@ -29,13 +29,13 @@ The rabuses are defined simply by drawing the shapes as a series of ordered numb
 234
  5
 ``````
-For more than 9 characters it supports a case insensetive alphanumeric va;ue up to z, so you can have a maximum of 35 character rabus. 'A' or 'a' means 10th. There is also a secondary rabuse file, by default called mirrors.def, which contains all the rabuses you want to also repeat mirrored vertically, so you don't have to do those twice e.g.
+For more than 9 characters it supports a case insensetive alphanumeric value up to z, so you can have a maximum of 35 character rabus. 'A' or 'a' means 10th. There is also a secondary rabuse file, by default called mirrors.def, which contains all the rabuses you want to also repeat mirrored vertically, so you don't have to do those twice e.g.
 ```
  1
  2
 345
 ``````
-And any non vertically symmetrical crucifixes we may want. There is a default rabuses file included in the distrubution which has all basic vertically symetrical rabuses such as straight lines, which also includes captial Is that we suspect. There is another files, mirrors.def, ehivch ocntainss any mirrored rabuses duvh as all the simple diagonals, and all the 3 and 5 wide crucifixes including tau cross Ts defined. These all get duplicated upside down.
+And any non vertically symmetrical crucifixes we may want. There is a default rabuses file included in the distrubution which has all basic vertically symetrical rabuses such as straight lines, which also includes captial Is that we suspect. There is another file, mirrors.def, which ocntains any mirrored rabuses including all the simple diagonals, and all the 3 and 5 wide crucifixes including tau cross Ts defined. These all get duplicated upside down.
 The diagonals just look like this
 ```
 1
