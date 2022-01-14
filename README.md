@@ -6,13 +6,14 @@ node cardano.js [options] [dictionary file]
 ``````
 ### Options
 ```
--m [file] - specific rabuses to mirror file, default mirror.def
--r [file] - specific rabuses file, default rabuses.def
--s [file] - specific special words file, default spevcial.list
 -c [file] - specific cardano grid input. default is cardano.object
+-r [file] - specific rabuses file, default rabuses.def
+-m [file] - specific rabuses to mirror file, default mirror.def
+-s [file] - specific special words file, default spevcial.list
+
 -p [grid width] - print grid of given width
 -v - verbose output, includes coordinate strings of all matches
--d [debug level] - produce debug output yo given debug level
+-d [debug level] - produce debug output to given debug level
 -R - turn reverse searching off, default is to search backwards and forwards
 ``````
 ## Verbage
