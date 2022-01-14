@@ -40,7 +40,7 @@ The diagonals just look like this
 ```
 1
  2
-  3```
+  3
 
 1
  2
@@ -137,7 +137,7 @@ SCORE 16
 ``````
 
 ## Limitations
-Setting plain/natural/real text in a grid neccessarily produces an excellent distribution os Sctrabble letters from which to create words. This is part of the Cardano defence. The reader really needs to know what they are looking for, and this has certainly been the case on the three that I have examined in the VVilliam Shake-speare authorship debate. Indeed most of the discovered crypts or messages are not even in English or are anagrammed. Cardano.js is not really capable of solving any of this. The scoring system will be developed as my current play thing, it's a lot of fun if you get a kick out of leathering the regular expression pattern matching system. We might hit something for free but I suspect all it will ultimately ever be able to do is hunt for things you can specify fairly acurately. 
+Setting plain/natural/real text in a grid neccessarily produces an excellent distribution of Sctrabble letters from which to create words. This is part of the Cardano defence. The reader really needs to know what they are looking for, and this has certainly been the case on the three that I have examined in the VVilliam Shake-speare authorship debate. Indeed most of the discovered crypts or messages are not even in English or are anagrammed. Cardano.js is not really capable of solving any of this. The scoring system will be developed as my current play thing, it's a lot of fun if you get a kick out of leathering the regular expression pattern matching system. We might hit something for free but I suspect all it will ultimately ever be able to do is hunt for things you can specify fairly acurately. 
 
 Currently cardano.js "latinises" both the vocabulary and object text, mapping U to V and J to I and upper casing everything. This will need to be refined for work on the King James Bible that Green has been researching.
 
