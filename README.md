@@ -16,9 +16,8 @@ node cardano.js [options] [dictionary file]
 -R - turn reverse searching off, default is to search backwards and forwards
 ``````
 ## Verbage
-cardano.js will search for any occurrence of any word from an input list, which can be the entire English dictionary if you want, 
-and a definition file of all instances of all the rabus shapes you have defined and suspect, separated by blank lines.
-The rabus file might look like
+cardano.js will search for any occurrence of any word from an input list, 
+and a definition file of all instances of all the rabus shapes you have defined and suspect. The input vocabulary list can be as large as you like, the entire english language can be handled if you so wish. The rabuses are defined simply by drawing the shapes as a series of ordered numbers in a defintion file separated by blank lines. A rabus file might look like
 ```
 1
 2
@@ -28,14 +27,14 @@ The rabus file might look like
 234
  5
 ``````
-and another file that you fill with rabuses you want to also repeat mirrored vertically so you don't have to do those twice e.g.
+If you need more than 9 characters just roll onto the alphabet, upper or lower case. so 'A' or 'a' means 10th. There is a secondary rabuse file, by default called mirrors.def, containing all the rabuses you want to also repeat mirrored vertically, so you don't have to do those twice e.g.
 ```
  1
  2
 345
 ``````
-And any non vertically symmetrical crucifixes we want.
-So we can define all the diagonals if we want
+And any non vertically symmetrical crucifixes we may want. There is a default rabuses file included in the distrubution which has all basic vertically symetrical rabuses such as straight lines but also captial Is that we suspect, including a mirror rabuses file containing all the simple diagonals, and all the 3 and 5 wide crucifixes including Ts defined. These all get duplicated upside down.
+The diagonals just look like this
 ```
 1
  2
@@ -47,8 +46,11 @@ So we can define all the diagonals if we want
    4
 ...
 ```
-And put them in the mirrors file and we get both directions. It tests all of these backwards and forwards, but you have to force it to look for anagrams.  It will hunt through all instances of all of these shapes in all the possible grids of an input cardano for any of your input words. You can even provide it with a special list of words you wish to anagrammise, but you cant take the proverbial with that, factorial(word length) gets carried away, as I'm sure you know.
-And it will do it in all but an instant (we all stand on the shoulders of greatness). You can play about with these files, just give it a rabus of
+Cardano tests all of these backwards and forwards, but you have to force it to look for anagrams. It hunts through all instances of all of these shapes in all the possible grids of an input cardano for any of your input words. You can even provide it with a special list of words you wish to anagrammise, but you cant take the proverbial with that, factorial(word length) gets carried away.
+For a data set consisting of the entire works of VVilliam Shakes-peare and King James Bible as input vocabulary, the program runs all but instantaneously.(we all stand on the shoulders of greatness). While actually detecting a cardano grid width is never trivial and my program isnt going to give you this on a plate mycg though I am trying, it is a very useful tool for verifying and testing assertions and finding specific words. 
+You can play about with these files, 
+## Examples
+If we give it a rabus fle of 
 ```
 1
 2
@@ -58,7 +60,7 @@ and a word list consisting only of
 ```
 TTT
 ``````
-and I will tell you in a blink which grids have got our surgical scar on. For the CVRST BE head stone on what is alleged to be Shakespeare's grave, 
+and it will tell you, in a blink, which grids have got our surgical scar on. For the CVRST BE head stone on what is alleged to be Shake-speare's grave, 
 there are actually 3 grids that have that mark
 ```
 cardano -c grave.object -r ttt.def -s ttt.list -m null.list -p 6 ttt.list -v null.list
