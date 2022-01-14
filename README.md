@@ -2,14 +2,14 @@
 Cardano grid investigation tool
 ## Usage
 ```
-node cardano.js [options] [dictionary file]
+node cardano.js [options] [vocabulary file(s)]
 ``````
 ### Options
 ```
--c [file] - specific cardano grid input. default is cardano.object
+-c [file] - specific cardano grid input file. default is cardano.object
 -r [file] - specific rabuses file, default rabuses.def
--m [file] - specific rabuses to mirror file, default mirror.def
--s [file] - specific special words file, default spevcial.list
+-m [file] - specific rabuses to mirror file, default mirrors.def
+-s [file] - specific special vocabulary file, default special.list
 
 -p [grid width] - print grid of given width
 -v - verbose output, includes coordinate strings of all matches
@@ -17,8 +17,8 @@ node cardano.js [options] [dictionary file]
 -R - turn reverse searching off, default is to search backwards and forwards
 ``````
 ## Description
-cardano.js will search any givern suspected Cardano grid for any occurrence of any word from an input vocabulary list, 
-using a definition file of all instances of all the rabus shapes you have defined and suspect. The input vocabulary list can be as large as you like, the entire english language can be handled if you so wish. The rabuses are defined simply by drawing the shapes as a series of ordered numbers in a defintion file separated by blank lines. A rabus file might look like
+cardano.js will search any givern suspected Cardano grid for any occurrence of any word from an input vocabulary list or lists, 
+using a definition file of all instances of all the rabus shapes you have defined and suspect. The input vocabulary list can be as large as you like, the entire English language can be handled if you so wish. The rabuses are defined simply by drawing the shapes as a series of ordered numbers in a defintion file separated by blank lines. A rabus file might look like
 ```
 1
 2
@@ -49,9 +49,11 @@ The diagonals just look like this
 ```
 Cardano tests all of these backwards and forwards, but you have to force it to look for anagrams. It hunts through all instances of all of these shapes in all the possible grids of an input cardano for any of your input words. You can even provide it with a special list of words you wish to anagrammise, but you cant take the proverbial with that, factorial(word length) gets carried away.
 
-For a data set consisting of the entire works of VVilliam Shakes-peare and King James Bible as input vocabulary, the program runs all but instantaneously.(we all stand on the shoulders of greatness). While actually detecting a cardano grid width is never trivial and my program isnt going to give you this on a plate as hard as I mgith try, it is a very useful tool for verifying and testing assertions and finding specific words. 
+For a data set consisting of the entire works of VVilliam Shakes-peare and King James Bible as input vocabulary, the program runs all but instantaneously in a fractionof a second (we all stand on the shoulders of greatness). While actually detecting a cardano grid width from scrtach is never trivial and my program isnt going to give you this on a plate as hard as I might try, it is a very useful tool for verifying and testing assertions and finding specific groups of words. 
 
-You can play about with these files, 
+There is also an option for a "special" vocabulary you wish to hunt for instances of anagrams for within the defined rabus shapes. 
+
+You can play about with these files to program the system, 
 ## Examples
 If we give it a rabus fle of 
 ```
@@ -135,6 +137,8 @@ SCORE 16
 
 ## Limitations
 Setting plain/natural/real text in a grid neccessarily produces an excellent distribution os Sctrabble letters from which to create words. This is part of the Cardano defence. The reader really needs to know what they are looking for, and this has certainly been the case on the three that I have examined in the VVilliam Shake-speare authorship debate. Indeed most of the discovered crypts or messages are not even in English or are anagrammed. Cardano.js is not really capable of solving any of this. The scoring system will be developed as my current play thing, it's a lot of fun if you get a kick out of leathering the regular expression pattern matching system. We might hit something for free but I suspect all it will ultimately ever be able to do is hunt for things you can specify fairly acurately. 
+
+Searching for anagrams of everything will produce just noise, and anagrams of large words will hurt. I did try throwing the whole of the Vulgate at it to bump up my Latin but that was quite futile. The Cardano in the READ IF THOV CANST stone barely contains any acrostics anyway.  
 
 It is nevertheless a useful tool for discovering simple things with little effort that might cost a valuable reasercher many hours effort. If you are working on these problems and have brutal word search requirements, please do ask for assistance. An hour or two of my time to save you a day and give you a tool you can reuse at will is a massive win. It can also help refine any statements of the form "this is the only grid that has such and such". 
 
