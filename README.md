@@ -130,3 +130,8 @@ SCORE 16
 ...
 ``````
 
+## Limitations
+Setting plain/natural/real text in a grid neccessarily produces an excellent distribution os Sctrabble letters from which to create words. This is part of the Cardano defence. The reader really needs to know what they are looking for, and this has certainly been the case on the three that I have examined in the VVilliam Shake-speare Authorship debate. Indeed most of the discovered crypts or messages are not even in English or are anagrammed. Cardano.js is not really capable of solving any of this. The scoring system will be develope as my current play thing, it's a lot of fun if you get a kick out of leathering the regular expression matching matching system. We might hit something for free but I suspect all it wil ultimately ever be able to do is hunt for things you can specify fairly acurately. 
+
+It is nevertheless a useful tool in discovering simple things with little effort that might cost a valuable reasercher many hours effort. If you are working on these problems and have brutal word search requirements, please do ask for assistance. An hour or two of my time to save you a day and give you a tool you can reuse at will is a massive win.
+
