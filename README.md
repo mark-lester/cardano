@@ -16,9 +16,9 @@ node cardano.js [options] [dictionary file]
 -d [debug level] - produce debug output to given debug level
 -R - turn reverse searching off, default is to search backwards and forwards
 ``````
-## Verbage
-cardano.js will search for any occurrence of any word from an input list, 
-and a definition file of all instances of all the rabus shapes you have defined and suspect. The input vocabulary list can be as large as you like, the entire english language can be handled if you so wish. The rabuses are defined simply by drawing the shapes as a series of ordered numbers in a defintion file separated by blank lines. A rabus file might look like
+## Description
+cardano.js will search any givern suspected Cardano grid for any occurrence of any word from an input vocabulary list, 
+using a definition file of all instances of all the rabus shapes you have defined and suspect. The input vocabulary list can be as large as you like, the entire english language can be handled if you so wish. The rabuses are defined simply by drawing the shapes as a series of ordered numbers in a defintion file separated by blank lines. A rabus file might look like
 ```
 1
 2
@@ -28,13 +28,13 @@ and a definition file of all instances of all the rabus shapes you have defined 
 234
  5
 ``````
-If you need more than 9 characters just roll onto the alphabet, upper or lower case. so 'A' or 'a' means 10th. There is a secondary rabuse file, by default called mirrors.def, containing all the rabuses you want to also repeat mirrored vertically, so you don't have to do those twice e.g.
+For more than 9 characters it supports a case insensetive alphanumeric va;ue up to z, so you can have a maximum of 35 character rabus. 'A' or 'a' means 10th. There is also a secondary rabuse file, by default called mirrors.def, which contains all the rabuses you want to also repeat mirrored vertically, so you don't have to do those twice e.g.
 ```
  1
  2
 345
 ``````
-And any non vertically symmetrical crucifixes we may want. There is a default rabuses file included in the distrubution which has all basic vertically symetrical rabuses such as straight lines but also captial Is that we suspect, including a mirror rabuses file containing all the simple diagonals, and all the 3 and 5 wide crucifixes including Ts defined. These all get duplicated upside down.
+And any non vertically symmetrical crucifixes we may want. There is a default rabuses file included in the distrubution which has all basic vertically symetrical rabuses such as straight lines, which also includes captial Is that we suspect. There is another files, mirrors.def, ehivch ocntainss any mirrored rabuses duvh as all the simple diagonals, and all the 3 and 5 wide crucifixes including tau cross Ts defined. These all get duplicated upside down.
 The diagonals just look like this
 ```
 1
@@ -48,7 +48,9 @@ The diagonals just look like this
 ...
 ```
 Cardano tests all of these backwards and forwards, but you have to force it to look for anagrams. It hunts through all instances of all of these shapes in all the possible grids of an input cardano for any of your input words. You can even provide it with a special list of words you wish to anagrammise, but you cant take the proverbial with that, factorial(word length) gets carried away.
-For a data set consisting of the entire works of VVilliam Shakes-peare and King James Bible as input vocabulary, the program runs all but instantaneously.(we all stand on the shoulders of greatness). While actually detecting a cardano grid width is never trivial and my program isnt going to give you this on a plate mycg though I am trying, it is a very useful tool for verifying and testing assertions and finding specific words. 
+
+For a data set consisting of the entire works of VVilliam Shakes-peare and King James Bible as input vocabulary, the program runs all but instantaneously.(we all stand on the shoulders of greatness). While actually detecting a cardano grid width is never trivial and my program isnt going to give you this on a plate as hard as I mgith try, it is a very useful tool for verifying and testing assertions and finding specific words. 
+
 You can play about with these files, 
 ## Examples
 If we give it a rabus fle of 
@@ -116,7 +118,8 @@ EHEYTM
 OVESMY
 BONES
 ``````
-In the example I included -p 6 on the command line so you can see that grud. So as you see grid 6 has our inverted Veres T also, as well as our surgical scar of TTT, though the inverted T is at the bottom of our cramped vertical grid, starting at coordinate 2,18 (the origin is top left, X across and Y down)
+In the example I included -p 6 on the command line so you can see that grid. So as you see grid 6 has our inverted Veres T also, as well as our surgical scar of TTT, though the inverted T is at the bottom of our cramped vertical grid, starting at coordinate 2,18 (the origin is top left, X across and Y down)
+
 For the Sonnets dedication we can find out that actually 5 grids have got the TTT. With so many Ts that's unsurprising IMO.
 ```
 cardano -c sonnets.object -r ttt.def -s ttt.list -m null.list -p 19 ttt.list -v null.list
@@ -131,7 +134,7 @@ SCORE 16
 ``````
 
 ## Limitations
-Setting plain/natural/real text in a grid neccessarily produces an excellent distribution os Sctrabble letters from which to create words. This is part of the Cardano defence. The reader really needs to know what they are looking for, and this has certainly been the case on the three that I have examined in the VVilliam Shake-speare Authorship debate. Indeed most of the discovered crypts or messages are not even in English or are anagrammed. Cardano.js is not really capable of solving any of this. The scoring system will be develope as my current play thing, it's a lot of fun if you get a kick out of leathering the regular expression matching matching system. We might hit something for free but I suspect all it wil ultimately ever be able to do is hunt for things you can specify fairly acurately. 
+Setting plain/natural/real text in a grid neccessarily produces an excellent distribution os Sctrabble letters from which to create words. This is part of the Cardano defence. The reader really needs to know what they are looking for, and this has certainly been the case on the three that I have examined in the VVilliam Shake-speare authorship debate. Indeed most of the discovered crypts or messages are not even in English or are anagrammed. Cardano.js is not really capable of solving any of this. The scoring system will be developed as my current play thing, it's a lot of fun if you get a kick out of leathering the regular expression pattern matching system. We might hit something for free but I suspect all it will ultimately ever be able to do is hunt for things you can specify fairly acurately. 
 
-It is nevertheless a useful tool in discovering simple things with little effort that might cost a valuable reasercher many hours effort. If you are working on these problems and have brutal word search requirements, please do ask for assistance. An hour or two of my time to save you a day and give you a tool you can reuse at will is a massive win.
+It is nevertheless a useful tool for discovering simple things with little effort that might cost a valuable reasercher many hours effort. If you are working on these problems and have brutal word search requirements, please do ask for assistance. An hour or two of my time to save you a day and give you a tool you can reuse at will is a massive win. It can also help refine any statements of the form "this is the only grid that has such and such". 
 
