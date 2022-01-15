@@ -33,6 +33,7 @@ grids=getGrids(data)
 let best=grids.filter(g=>g.score === grids[0].score).map(g=>g.grid[0].length)
 console.log("BEST GRID"+(best.length>1?'S':'')+" "+best)
 console.log("SCORE "+grids[0].score)
+grids=grids.filter(g=>g.score)
 if (VERBOSE)
 	grids.map(g=>console.log(g.grid[0].length,g.score,g.hits.length,g.hits.map(h=>h.match+"@"+h.address)))
 else
@@ -124,15 +125,14 @@ if (DEBUG > 1) grid.map(g=>console.log(g.join('')))
 	rabuses.map(r => {
 		getInstances(r,grid).map(i =>{
 if (DEBUG > 1) console.log("SEARCH "+i.text)
-			var hits=findStuff(BIG_REGEXP,i.text)
+			let hits=findStuff(BIG_REGEXP,i.text)
 			if (REVERSE_IT){
-				console.log("REVERSE="+i.reversal)
+if (DEBUG>1) console.log("REVERSE="+i.reversal)
 				hits=hits.concat(findStuff(BIG_REGEXP,i.reversal))
 			}
 
 			if (!hits.length)
 				return
-
 			hits.map(m=>{
 				m.rabus=r
 				m.instance=i
@@ -140,12 +140,26 @@ if (DEBUG > 1) console.log("SEARCH "+i.text)
 				m.code=hashCode(m.address)
 				m.score=rateMatch(m.match)
 if (DEBUG) console.log("MATCH "+m.match)
-
 			})
+			let found={}
+			hits=hits.filter(hit=>{
+				if (found[hit.code])
+					return false
+				found[hit.code]=1
+				return true
+			})
+			let unused = i.text.length - hits.map(m=>m.match.length).reduce(Sum)
+			let total = hits.map(m=>m.score).reduce(Product)
+if (DEBUG>1) console.log("UNUSED="+unused)
+			let factor=Math.pow(2,unused)
+if (DEBUG>1) console.log("FACTOR="+factor)
+			hits.map(m=>{
+				m.score=total
+			})
+//			let tmatched=hits.map(m=>m.match.length*Factor(m.natch.length-used)).reduce(Sum)
+//			let total=rateLength(tmatched)/Math.pow(2,hits.length)
+//			hits.map(m=>m.score=total)
 
-			let tmatched=hits.map(m=>m.match.length*Factor(m.natch)).reduce(Sum)
-			let total=rateLength(tmatched)/Math.pow(2,hits.length)
-			hits.map(m=>m.score=total)
 			output.hits=output.hits.concat(hits)
 		})
 	})
@@ -163,6 +177,7 @@ if (DEBUG) console.log("MATCH "+m.match)
 			output.scores.push(hit.score)
 			return true
 		})
+
 if (DEBUG) console.log("REDUCED HITS "+output.hits.length)
 	if (output.scores.length)
 		output.score=output.scores.reduce(Sum)
