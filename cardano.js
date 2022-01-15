@@ -11,15 +11,20 @@ if (DICTIONARIES.length === 0){
 	console.error(" -c [file] - specific cardano grid input file. default is cardano.object")
 	console.error(" -r [file] - specific rabuses file, default rabuses.def")
 	console.error(" -m [file] - specific rabuses to mirror file, default mirrors.def")
-	console.error(" -s [file] - specific special vocabulary file, default special.list")
+	console.error(" -s [file] - specific special  (to be anagrammised) vocabulary file, default special.list")
 	console.error(" ")
 	console.error(" -p [grid width] - print grid of given width")
+	cansole.error(" -w - minimum word length, default is 4, you may wish for TTT or IHS etc")
 	console.error(" -v - verbose output, includes coordinate strings of all matches")
 	console.error(" -d [debug level] - produce debug output to given debug level")
 	console.error(" -R - turn reverse searching off, default is to search backwards and forwards")
+	console.error(" -g - minimum specic grid width")
+	console.error(" -G - maximum specic grid width")
 
 	process.exit()
 }
+const MINIMUM_GRID_WIDTH=argv['g']||3
+const MAXIMUM_GRID_WIDTH=argv['G']
 const DEFAULT_MIRROR_FILE='mirror.def'
 const MIRROR_FILE=argv['m'] || DEFAULT_MIRROR_FILE
 const DEFAULT_RABUS_FILE='rabuses.def'
@@ -41,13 +46,17 @@ grids=getGrids(data)
 	.sort((b,a) => (a.score > b.score) ? 1 : ((b.score > a.score) ? -1 : 0))
 
 let best=grids.filter(g=>g.score === grids[0].score).map(g=>g.grid[0].length)
-console.log("BEST GRID"+(best.length>1?'S':'')+" "+best)
-console.log("SCORE "+grids[0].score)
-grids=grids.filter(g=>g.score)
-if (VERBOSE)
-	grids.map(g=>console.log(g.grid[0].length,g.score,g.hits.length,g.hits.map(h=>h.match+"@"+h.address)))
-else
-	grids.map(g=>console.log(g.grid[0].length,g.score,g.hits.length))
+if (grids[0].score==0){
+	console.log(" *** NOTHING MATCHED ***")
+} else {
+	console.log("BEST GRID"+(best.length>1?'S':'')+" "+best)
+	console.log("SCORE "+grids[0].score)
+	grids=grids.filter(g=>g.score)
+	if (VERBOSE)
+		grids.map(g=>console.log(g.grid[0].length,g.score,g.hits.length,g.hits.map(h=>h.match+"@"+h.address+"("+h.score+")")))
+	else
+		grids.map(g=>console.log(g.grid[0].length,g.score,g.hits.length))
+}
 
 if (PRINT_GRID)
 	getGrid(data,PRINT_GRID).map(l=>console.log(l.join('')))
@@ -110,12 +119,13 @@ if (DEBUG) console.log("MATCH="+m[0])
 
 function getGrids(data){
 //	data=latinize(data)
-	let width=4
+	let width=MINIMUM_GRID_WIDTH
+	let end=MAXIMUM_GRID_WIDTH || data.length/2
 	let output=[]
 	do {
 		output.push(getGrid(data,width))
 		width++
-	} while (data.length/width > 4)
+	} while (width <= end)
 
 	return output
 }
@@ -142,8 +152,11 @@ const Sum = (accumulator, curr) => accumulator + curr;
 if (DEBUG) console.log("GRID WIDTH "+grid[0].length)
 if (DEBUG > 1) grid.map(g=>console.log(g.join('')))
 
+	let instanceId=0
 	rabuses.map(r => {
 		getInstances(r,grid).map(i =>{
+			instanceId++
+			
 if (DEBUG > 1) console.log("SEARCH "+i.text)
 			let hits=findStuff(BIG_REGEXP,i.text)
 			if (REVERSE_IT){
@@ -155,11 +168,11 @@ if (DEBUG>1) console.log("REVERSE="+i.reversal)
 				return
 			hits.map(m=>{
 				m.rabus=r
-				m.instance=i
+				m.instanceId=instanceId
 				m.address=codify(r,i,m)
 				m.code=hashCode(m.address)
 				m.score=rateMatch(m.match)
-if (DEBUG) console.log("MATCH "+m.match)
+if (DEBUG) console.log("INSERT MATCH "+m.match)
 			})
 			let found={}
 			hits=hits.filter(hit=>{
@@ -169,12 +182,14 @@ if (DEBUG) console.log("MATCH "+m.match)
 				return true
 			})
 			let unused = i.text.length - hits.map(m=>m.match.length).reduce(Sum)
+if (DEBUG) console.log("UNUSED="+unused)
 			let total = hits.map(m=>m.score).reduce(Product)
-if (DEBUG>1) console.log("UNUSED="+unused)
+if (DEBUG) console.log("TOTAL="+total)
 			let factor=Math.pow(2,unused)
-if (DEBUG>1) console.log("FACTOR="+factor)
+if (DEBUG) console.log("FACTOR="+factor)
 			hits.map(m=>{
-				m.score=total
+				m.score=total/factor
+if (DEBUG) console.log("SCORE="+m.score)
 			})
 //			let tmatched=hits.map(m=>m.match.length*Factor(m.natch.length-used)).reduce(Sum)
 //			let total=rateLength(tmatched)/Math.pow(2,hits.length)
@@ -186,7 +201,7 @@ if (DEBUG>1) console.log("FACTOR="+factor)
 	let found={}
 	output.hits=output.hits
 		.sort((a,b)=>
-			(a.score > b.score) ? 1 : ((b.score > a.score) ? -1 : 
+			(a.score < b.score) ? 1 : ((b.score < a.score) ? -1 : 
 				(a.rabus.cells.length > b.rabus.cells.length ) ? 1 :
 				((b.rabus.cells.length > a.rabus.cells.length ) ? -1 : 0)
 		))
@@ -194,13 +209,24 @@ if (DEBUG>1) console.log("FACTOR="+factor)
 			if (found[hit.code])
 				return false
 			found[hit.code]=1
-			output.scores.push(hit.score)
 			return true
 		})
 
-if (DEBUG) console.log("REDUCED HITS "+output.hits.length)
-	if (output.scores.length)
-		output.score=output.scores.reduce(Sum)
+	if (output.hits.length){
+		found={}
+		output.score=output.hits
+			.filter(hit=>{
+				if (found[hit.instanceId])
+					return false
+				found[hit.instanceId]=true
+				return true
+			})
+			.map(hit=>hit.score)
+			.reduce(Sum)
+	}
+
+
+if (DEBUG) console.log("REDUCED HITS "+output.hits.length+" SCORE "+output.score)
 	return output
 }
 
@@ -293,7 +319,7 @@ function getObject(file){
 	} catch (err) {
 		console.error(err)
 	}
-	return data.replace(/\W+/g,'').split('')
+	return latinize(data.replace(/\W+/g,'')).split('')
 }
 
 
