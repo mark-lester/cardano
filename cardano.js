@@ -7,14 +7,24 @@ const REVERSE_IT=argv['R'] ? false : true
 if (DEBUG) console.log("REVERSE="+REVERSE_IT)
 let DICTIONARIES=argv['_']
 if (DICTIONARIES.length === 0){
-	console.error("Usage: cardano.js <list of dictionary files>")
+	console.error("Usage: cardano.js [options] <list of dictionary files>")
+	console.error(" -c [file] - specific cardano grid input file. default is cardano.object")
+	console.error(" -r [file] - specific rabuses file, default rabuses.def")
+	console.error(" -m [file] - specific rabuses to mirror file, default mirrors.def")
+	console.error(" -s [file] - specific special vocabulary file, default special.list")
+	console.error(" ")
+	console.error(" -p [grid width] - print grid of given width")
+	console.error(" -v - verbose output, includes coordinate strings of all matches")
+	console.error(" -d [debug level] - produce debug output to given debug level")
+	console.error(" -R - turn reverse searching off, default is to search backwards and forwards")
+
 	process.exit()
 }
-const DEFAILT_MIRROR_FILE='mirror.def'
-const MIRROR_FILE=argv['m'] || DEFAILT_MIRROR_FILE
-const DEFAILT_RABUS_FILE='rabuses.def'
-const RABUS_FILE=argv['r'] || DEFAILT_RABUS_FILE
-const DEFAILT_SPECIAL_FILE='special.list'
+const DEFAULT_MIRROR_FILE='mirror.def'
+const MIRROR_FILE=argv['m'] || DEFAULT_MIRROR_FILE
+const DEFAULT_RABUS_FILE='rabuses.def'
+const RABUS_FILE=argv['r'] || DEFAULT_RABUS_FILE
+const DEFAULT_SPECIAL_FILE='special.list'
 const SPECIAL_FILE=argv['s'] || DEFAILT_SPECIAL_FILE
 const DEFAULT_CARDANO_OBJECT_FILE='cardano.object'
 const CARDANO_OBJECT_FILE=argv['c']||DEFAULT_CARDANO_OBJECT_FILE
@@ -52,10 +62,16 @@ function getExpression(){
 	})
 	words=words.filter(onlyUnique)
 if (DEBUG) console.log("PERMUTED="+words)
+if (DEBUG) console.log("DICTIONARIES="+DICTIONARIES)
 	DICTIONARIES.map(d=>words=words.concat(getWords(d).map(latinize)))
 if (DEBUG) console.log("DICTIONARY SIZE="+words.length)
 
 	let exp=words.join('|')
+	if (!words.length) {
+		console.error("*** WARNING ***, There are no words in your dictionary.")
+		console.error("This may be due to a minimum word length of "+MINIMUM_WORD_LENGTH+" being set")
+		console.error("use -w [minimum word size] to inlude shorter words")
+	}
 	return new RegExp(exp,'g')
 }
 
@@ -65,6 +81,7 @@ function onlyUnique(value, index, self) {
 
 
 function latinize(text){
+if (DEBUG > 1)console.log("LATINIZING "+text)
 	return text
 		.toUpperCase()
 		.replace(/J/,'I')
@@ -78,6 +95,9 @@ function findStuff(exp,s){
 	do {
 		m = exp.exec(s);
 		if (m) {
+			if (!m[0].length)
+				return output
+
 if (DEBUG) console.log("MATCH="+m[0])
 			output.push({
 				match:m[0],
@@ -236,6 +256,7 @@ function getWords(file,length){
 	} catch (err) {
 		console.error(err)
 	}
+if (DEBUG) console.log("WORD DATA="+data)
 	return data.split(/\W+/)
 		.filter(word => word.length >= length)
 }
