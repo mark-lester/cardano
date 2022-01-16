@@ -1,4 +1,5 @@
 #!/usr/bin/node
+const util=require("node-util")
 let argv = minimist(process.argv.slice(2));
 const DEBUG=argv['d'] || false
 const VERBOSE=argv['v'] || false
@@ -14,7 +15,7 @@ if (DICTIONARIES.length === 0){
 	console.error(" -s [file] - specific special  (to be anagrammised) vocabulary file, default special.list")
 	console.error(" ")
 	console.error(" -p [grid width] - print grid of given width")
-	cansole.error(" -w - minimum word length, default is 4, you may wish for TTT or IHS etc")
+	console.error(" -w - minimum word length, default is 4, you may wish for TTT or IHS etc")
 	console.error(" -v - verbose output, includes coordinate strings of all matches")
 	console.error(" -d [debug level] - produce debug output to given debug level")
 	console.error(" -R - turn reverse searching off, default is to search backwards and forwards")
@@ -30,7 +31,7 @@ const MIRROR_FILE=argv['m'] || DEFAULT_MIRROR_FILE
 const DEFAULT_RABUS_FILE='rabuses.def'
 const RABUS_FILE=argv['r'] || DEFAULT_RABUS_FILE
 const DEFAULT_SPECIAL_FILE='special.list'
-const SPECIAL_FILE=argv['s'] || DEFAILT_SPECIAL_FILE
+const SPECIAL_FILE=argv['s'] || DEFAULT_SPECIAL_FILE
 const DEFAULT_CARDANO_OBJECT_FILE='cardano.object'
 const CARDANO_OBJECT_FILE=argv['c']||DEFAULT_CARDANO_OBJECT_FILE
 
@@ -39,6 +40,10 @@ const fs = require('fs')
 let Specials={}
 let Avalue="A".charCodeAt(0);
 let rabuses=getRabuses()
+if (DEBUG){
+	console.log("RABUSES")
+	console.log(util.inspect(rabuses, {showHidden: false, depth: null, colors: true}))
+}
 let BIG_REGEXP=getExpression()
 let data=getObject(CARDANO_OBJECT_FILE)
 grids=getGrids(data)
@@ -290,10 +295,17 @@ if (DEBUG) console.log("WORD DATA="+data)
 function getRabuses(){
 	let rabuses=getRabuseFile(RABUS_FILE)
 	let mirror=getRabuseFile(MIRROR_FILE) || []
+	let order=1
 	let flipped=mirror.map(r=> ( {
 			width:r.width,
 			height:r.height,
-			cells: r.cells.slice(0).reverse()
+			cells: r.cells.slice(0).map(c=>{
+				c = Object.assign({}, c);
+if (DEBUG>1)console.log("FLIP ROW "+c.row+" FROM H "+r.height+" TO "+(r.height-c.row-2))
+				c.row=r.height-c.row-2
+				c.order=order++
+				return c
+			})
 		})
 	)
 
@@ -379,7 +391,7 @@ function parseRabus(def){
 
 function alphanum(val){
 	if (val.match(/\d/))
-		return val+0
+		return Number(val)
 	return val.toUpperCase().charCodeAt(0) - Avalue + 10
 }
 
