@@ -34,17 +34,20 @@ const DEFAULT_SPECIAL_FILE='special.list'
 const SPECIAL_FILE=argv['s'] || DEFAULT_SPECIAL_FILE
 const DEFAULT_DICTIONARY='words.list'
 const DICTIONARY=argv['D']||DEFAULT_DICTIONARY
+const EXCEL_FILE=argv['X']
 
 const MINIMUM_WORD_LENGTH=argv['w']||4
 const fs = require('fs')
 let Specials={}
 let Avalue="A".charCodeAt(0);
+let rabusId=1
 let rabuses=getRabuses()
 if (DEBUG>2){
 	console.log("RABUSES")
 	console.log(util.inspect(rabuses, {showHidden: false, depth: null, colors: true}))
 }
 let BIG_REGEXP=getExpression(DICTIONARY)
+let lastgrids=undefined
 CARDANOS.map(cardano=>{
 	let data=getObject(cardano)
 	let grids=getGrids(data)
@@ -73,9 +76,63 @@ CARDANOS.map(cardano=>{
 		grids.map(g=>console.log([g.grid[0].length,g.score,g.hits.length]))
 	if (PRINT_GRID)
 		getGrid(data,PRINT_GRID).map(l=>console.log(l.join('')))
+	lastgrids=grids
 })
+if (EXCEL_FILE){
+	OutputXL(EXCEL_FILE,lastgrids)
+}
 
-process.exit()
+
+
+function OutputXL(filename,grids){
+	var xl = require('excel4node');
+ 
+	var wb = new xl.Workbook();
+	wb.writeP = util.promisify(wb.write)
+	console.log("WRITING FILE "+filename)
+	return wb.write(filename)
+
+	var Normal = wb.createStyle({
+		font: {
+			color: 'black',
+			size: 12,
+		},
+	});
+	var Highlight = wb.createStyle({
+		font: {
+			color: 'red',
+			size: 16,
+		},
+	});
+
+	function addSheet(grid){
+		let lineNumber=1
+		var ws = wb.addWorksheet('Width '+grid.grid[0].length);
+
+		function addLine(line){
+			let cellNumber=1
+			function addCell(value){
+				ws.cell(lineNumber,cellNumber++).string(value).style(Normal)
+			}
+			line.map(addCell)
+			lineNumber++
+		}
+		function colourHit(hit){
+			hit.address.split(/,/).map(c=>{
+				coord=c.split(/:/)
+				ws.cell(coord[0],coord[1]).style(Highlight)
+			})
+		}
+		grid.grid.map(addLine)
+		grid.hits.map(colourHit)
+	}
+
+	grids.map(addSheet)
+	console.log("WRITING AFAIN FILE "+filename)
+	return wb.writeP(filename)
+}
+
+			
 
 function getExpression(dictionary){
 	let words=[]
@@ -190,8 +247,7 @@ if (DEBUG) console.log("INSERT MATCH "+m.match)
 				m.instanceId=instanceId
 				m.address=codify(r,i,m)
 				m.address.split(/,/).map(c=>{
-					if (c)
-						iused[c]=cused[c]=true
+					iused[c]=cused[c]=true
 				})
 				m.code=hashCode(m.address)
 				m.score=rateMatch(m.match)
@@ -259,17 +315,13 @@ if (DEBUG) console.log("REDUCED HITS "+output.hits.length+" SCORE "+output.score
 }
 
 function codify(r,i,m){
-	let cstring=""
-	let c=[]
-	r.cells.slice(i,m.match.length).map(c=>{
+	let cstring=r.cells.slice(i,m.match.length).map(c=>{
 		return (c.col+i.ox+1) +":"+ (c.row+i.oy+1)
 	})
 	.sort()
-	.map(s=>{
-		cstring+=s+","
-	})
+	.join(',')
+
 	return cstring
-if (DEBUG > 1) console.log("CODING "+cstring,hashCode(cstring))
 }
 
 
@@ -377,7 +429,6 @@ function pluckInstance(rabus,grid,ox,oy){
 }
 
 
-let rabusId=1
 function parseRabus(def){
 	let row=0
 	let width=0
@@ -407,7 +458,7 @@ function parseRabus(def){
 		.sort((a,b) => (a.order > b.order) ? 1 : ((b.order > a.order) ? -1 : 0))
 
 	return {
-		id:rabusdId++,
+		id:rabusId++,
 		width:width,
 		height:row,
 		cells:cells
