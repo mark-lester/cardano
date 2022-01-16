@@ -6,10 +6,10 @@ const VERBOSE=argv['v'] || false
 const PRINT_GRID=argv['p'] || false
 const REVERSE_IT=argv['R'] ? false : true
 if (DEBUG) console.log("REVERSE="+REVERSE_IT)
-let DICTIONARIES=argv['_']
-if (DICTIONARIES.length === 0){
-	console.error("Usage: cardano.js [options] <list of dictionary files>")
-	console.error(" -c [file] - specific cardano grid input file. default is cardano.object")
+let CARDANOS=argv['_']
+if (CARDANOS.length === 0){
+	console.error("Usage: cardano.js [options] <list of cardano files to test>")
+	console.error(" -D [file] - dictionary/vocabulary file. defalut words.list")
 	console.error(" -r [file] - specific rabuses file, default rabuses.def")
 	console.error(" -m [file] - specific rabuses to mirror file, default mirrors.def")
 	console.error(" -s [file] - specific special  (to be anagrammised) vocabulary file, default special.list")
@@ -32,8 +32,8 @@ const DEFAULT_RABUS_FILE='rabuses.def'
 const RABUS_FILE=argv['r'] || DEFAULT_RABUS_FILE
 const DEFAULT_SPECIAL_FILE='special.list'
 const SPECIAL_FILE=argv['s'] || DEFAULT_SPECIAL_FILE
-const DEFAULT_CARDANO_OBJECT_FILE='cardano.object'
-const CARDANO_OBJECT_FILE=argv['c']||DEFAULT_CARDANO_OBJECT_FILE
+const DEFAULT_DICTIONARY='words.list'
+const DICTIONARY=argv['D']||DEFAULT_DICTIONARY
 
 const MINIMUM_WORD_LENGTH=argv['w']||4
 const fs = require('fs')
@@ -44,19 +44,25 @@ if (DEBUG>2){
 	console.log("RABUSES")
 	console.log(util.inspect(rabuses, {showHidden: false, depth: null, colors: true}))
 }
-let BIG_REGEXP=getExpression()
-let data=getObject(CARDANO_OBJECT_FILE)
-grids=getGrids(data)
-	.map(ScanGrid)
-	.sort((b,a) => (a.score > b.score) ? 1 : ((b.score > a.score) ? -1 : 0))
+let BIG_REGEXP=getExpression(DICTIONARY)
+CARDANOS.map(cardano=>{
+	let data=getObject(cardano)
+	let grids=getGrids(data)
+		.map(ScanGrid)
+		.sort((b,a) => (a.score > b.score) ? 1 : ((b.score > a.score) ? -1 : 0))
+		.sort((b,a) => (a.instances > b.instances) ? 1 : ((b.instances > a.instances) ? -1 : 0))
+//		.sort((b,a) => (a.instances > b.instances) ? 1 : ((b.instances > a.instances) ? -1 :
+//			(a.score > b.score) ? 1 : ((b.score > a.score) ? -1 : 0))
+//		)
 
-let best=grids.filter(g=>g.score === grids[0].score).map(g=>g.grid[0].length)
+	let best=grids.filter(g=>g.instances === grids[0].instances).map(g=>g.grid[0].length)
 
-if (grids[0].score==0){
-	console.log(" *** NOTHING MATCHED ***")
-} else {
-	console.log("BEST GRID"+(best.length>1?'S':'')+" "+best)
-	console.log("SCORE ",grids[0].score)
+	if (grids[0].instances==0){
+		if (DEBUG)console.log(" *** NOTHING MATCHED ***")
+		return
+	} 
+
+	console.log("**FILE "+cardano+" BEST"+(best.length>1?'S':'')+" "+best+" SCORE "+[grids[0].instances,grids[0].score])
 	grids=grids.filter(g=>g.score)
 	if (DEBUG>2)
 		console.log(util.inspect(grids, {showHidden: false, depth: null, colors: true}))
@@ -65,13 +71,13 @@ if (grids[0].score==0){
 		grids.map(g=>console.log([g.grid[0].length,g.score,g.hits.length,g.hits.map(h=>h.match+"@"+h.address+"("+h.score+")")]))
 	else
 		grids.map(g=>console.log([g.grid[0].length,g.score,g.hits.length]))
-}
+	if (PRINT_GRID)
+		getGrid(data,PRINT_GRID).map(l=>console.log(l.join('')))
+})
 
-if (PRINT_GRID)
-	getGrid(data,PRINT_GRID).map(l=>console.log(l.join('')))
-//process.exit()
+process.exit()
 
-function getExpression(){
+function getExpression(dictionary){
 	let words=[]
 	let special=getWords(SPECIAL_FILE,2).map(latinize)
 	special.map(s=>{
@@ -80,8 +86,8 @@ function getExpression(){
 	})
 	words=words.filter(onlyUnique)
 if (DEBUG) console.log("PERMUTED="+words)
-if (DEBUG) console.log("DICTIONARIES="+DICTIONARIES)
-	DICTIONARIES.map(d=>words=words.concat(getWords(d).map(latinize)))
+	words=words.concat(getWords(dictionary).map(latinize))
+
 if (DEBUG) console.log("DICTIONARY SIZE="+words.length)
 
 	let exp=words.join('|')
@@ -164,8 +170,8 @@ if (DEBUG > 1) grid.map(g=>console.log(g.join('')))
 	let instanceId=0
 	let cused={}
 	rabuses.map(r => {
+if (DEBUG>1) console.log("RABUS "+r.cells)
 		getInstances(r,grid).map(i =>{
-			instanceId++
 			iused={}
 			
 if (DEBUG > 1) console.log("SEARCH "+i.text)
@@ -177,16 +183,18 @@ if (DEBUG>1) console.log("REVERSE="+i.reversal)
 
 			if (!hits.length)
 				return
+			instanceId++
 			hits.map(m=>{
+if (DEBUG) console.log("INSERT MATCH "+m.match)
 				m.rabus=r
 				m.instanceId=instanceId
 				m.address=codify(r,i,m)
 				m.address.split(/,/).map(c=>{
-					iused[c]=cused[c]=true
+					if (c)
+						iused[c]=cused[c]=true
 				})
 				m.code=hashCode(m.address)
 				m.score=rateMatch(m.match)
-if (DEBUG) console.log("INSERT MATCH "+m.match)
 			})
 			let found={}
 			hits=hits.filter(hit=>{
@@ -204,12 +212,12 @@ if (DEBUG) console.log("TOTAL="+total)
 if (DEBUG) console.log("FACTOR="+factor)
 			hits.map(m=>{
 				m.score=total/factor
-if (DEBUG) console.log("SCORE="+m.score)
 			})
 //			let tmatched=hits.map(m=>m.match.length*Factor(m.natch.length-used)).reduce(Sum)
 //			let total=rateLength(tmatched)/Math.pow(2,hits.length)
 */
-			let total=Object.keys(iused).length
+			let total=Object.keys(cused).length
+if (DEBUG) console.log("INSTANCE SCORE="+[total,Object.keys(cused)])
 			hits.map(m=>m.score=total)
 
 			output.hits=output.hits.concat(hits)
@@ -244,8 +252,8 @@ if (DEBUG) console.log("SCORE="+m.score)
 	}
 */
 	output.score=Object.keys(cused).length
-
-
+	output.instances=output.hits.map(h=>h.instanceId).filter(onlyUnique).length
+if (DEBUG) console.log("GRID SCORE="+[output.score,Object.keys(cused)])
 if (DEBUG) console.log("REDUCED HITS "+output.hits.length+" SCORE "+output.score)
 	return output
 }
@@ -314,7 +322,7 @@ function getRabuses(){
 	let flipped=mirror.map(r=> ( {
 			width:r.width,
 			height:r.height,
-			cells: r.cells.slice(0).map(c=>{
+			cells: r.cells.slice(0).reverse().map(c=>{
 				c = Object.assign({}, c);
 if (DEBUG>1)console.log("FLIP ROW "+c.row+" FROM H "+r.height+" TO "+(r.height-c.row-2))
 				c.row=r.height-c.row-2
@@ -369,6 +377,7 @@ function pluckInstance(rabus,grid,ox,oy){
 }
 
 
+let rabusId=1
 function parseRabus(def){
 	let row=0
 	let width=0
@@ -398,6 +407,7 @@ function parseRabus(def){
 		.sort((a,b) => (a.order > b.order) ? 1 : ((b.order > a.order) ? -1 : 0))
 
 	return {
+		id:rabusdId++,
 		width:width,
 		height:row,
 		cells:cells
