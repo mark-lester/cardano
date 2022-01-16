@@ -15,6 +15,9 @@ node cardano.js [options] [vocabulary file(s)]
 -v - verbose output, includes coordinate strings of all matches
 -d [debug level] - produce debug output to given debug level
 -R - turn reverse searching off, default is to search backwards and forwards
+-g - minimum specic grid width
+-G - maximum specic grid width
+
 ``````
 ## Description
 cardano.js will search any givern suspected Cardano grid for any occurrence of any word from an input vocabulary list or lists, 
