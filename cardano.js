@@ -40,7 +40,7 @@ const fs = require('fs')
 let Specials={}
 let Avalue="A".charCodeAt(0);
 let rabuses=getRabuses()
-if (DEBUG){
+if (DEBUG>2){
 	console.log("RABUSES")
 	console.log(util.inspect(rabuses, {showHidden: false, depth: null, colors: true}))
 }
@@ -51,21 +51,25 @@ grids=getGrids(data)
 	.sort((b,a) => (a.score > b.score) ? 1 : ((b.score > a.score) ? -1 : 0))
 
 let best=grids.filter(g=>g.score === grids[0].score).map(g=>g.grid[0].length)
+
 if (grids[0].score==0){
 	console.log(" *** NOTHING MATCHED ***")
 } else {
 	console.log("BEST GRID"+(best.length>1?'S':'')+" "+best)
-	console.log("SCORE "+grids[0].score)
+	console.log("SCORE ",grids[0].score)
 	grids=grids.filter(g=>g.score)
+	if (DEBUG>2)
+		console.log(util.inspect(grids, {showHidden: false, depth: null, colors: true}))
+
 	if (VERBOSE)
-		grids.map(g=>console.log(g.grid[0].length,g.score,g.hits.length,g.hits.map(h=>h.match+"@"+h.address+"("+h.score+")")))
+		grids.map(g=>console.log([g.grid[0].length,g.score,g.hits.length,g.hits.map(h=>h.match+"@"+h.address+"("+h.score+")")]))
 	else
-		grids.map(g=>console.log(g.grid[0].length,g.score,g.hits.length))
+		grids.map(g=>console.log([g.grid[0].length,g.score,g.hits.length]))
 }
 
 if (PRINT_GRID)
 	getGrid(data,PRINT_GRID).map(l=>console.log(l.join('')))
-process.exit()
+//process.exit()
 
 function getExpression(){
 	let words=[]
@@ -158,9 +162,11 @@ if (DEBUG) console.log("GRID WIDTH "+grid[0].length)
 if (DEBUG > 1) grid.map(g=>console.log(g.join('')))
 
 	let instanceId=0
+	let cused={}
 	rabuses.map(r => {
 		getInstances(r,grid).map(i =>{
 			instanceId++
+			iused={}
 			
 if (DEBUG > 1) console.log("SEARCH "+i.text)
 			let hits=findStuff(BIG_REGEXP,i.text)
@@ -175,6 +181,9 @@ if (DEBUG>1) console.log("REVERSE="+i.reversal)
 				m.rabus=r
 				m.instanceId=instanceId
 				m.address=codify(r,i,m)
+				m.address.split(/,/).map(c=>{
+					iused[c]=cused[c]=true
+				})
 				m.code=hashCode(m.address)
 				m.score=rateMatch(m.match)
 if (DEBUG) console.log("INSERT MATCH "+m.match)
@@ -186,6 +195,7 @@ if (DEBUG) console.log("INSERT MATCH "+m.match)
 				found[hit.code]=1
 				return true
 			})
+/*
 			let unused = i.text.length - hits.map(m=>m.match.length).reduce(Sum)
 if (DEBUG) console.log("UNUSED="+unused)
 			let total = hits.map(m=>m.score).reduce(Product)
@@ -198,7 +208,9 @@ if (DEBUG) console.log("SCORE="+m.score)
 			})
 //			let tmatched=hits.map(m=>m.match.length*Factor(m.natch.length-used)).reduce(Sum)
 //			let total=rateLength(tmatched)/Math.pow(2,hits.length)
-//			hits.map(m=>m.score=total)
+*/
+			let total=Object.keys(iused).length
+			hits.map(m=>m.score=total)
 
 			output.hits=output.hits.concat(hits)
 		})
@@ -217,6 +229,7 @@ if (DEBUG) console.log("SCORE="+m.score)
 			return true
 		})
 
+/*
 	if (output.hits.length){
 		found={}
 		output.score=output.hits
@@ -229,6 +242,8 @@ if (DEBUG) console.log("SCORE="+m.score)
 			.map(hit=>hit.score)
 			.reduce(Sum)
 	}
+*/
+	output.score=Object.keys(cused).length
 
 
 if (DEBUG) console.log("REDUCED HITS "+output.hits.length+" SCORE "+output.score)
