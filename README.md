@@ -2,21 +2,25 @@
 Cardano grid investigation tool
 ## Usage
 ```
-node cardano.js [options] [vocabulary file(s)]
+node cardano.js [options] <list of cardano files to test>
 ``````
 ### Options
 ```
--c [file] - specific cardano grid input file. default is cardano.object
--r [file] - specific rabuses file, default rabuses.def
--m [file] - specific rabuses to mirror file, default mirrors.def
--s [file] - specific special vocabulary file, default special.list
+ -D [file] - dictionary/vocabulary file. try -D words.list
+ -A [file] - dictionary be anagrammised file, try -A special.list
+ -R [file] - rabuses file, try -R rabuses.def
+ -M [file] - rabuses to mirror file, try -M mirror.def
+ -O [file] - output HTML to file
+ 
+ -p [grid width] - print grid of given width
+ -P print grid all grids
+ -g - minimum specic grid width
+ -G - maximum specic grid width
+ -w - minimum word length to filter dictionary, default is 3
+ -v - verbose output, includes coordinate strings of all matches
+ -d [debug level] - produce debug output to given debug level
+ -r - turn reverse searching off, default is to search backwards and forwards
 
--p [grid width] - print grid of given width
--v - verbose output, includes coordinate strings of all matches
--d [debug level] - produce debug output to given debug level
--R - turn reverse searching off, default is to search backwards and forwards
--g - minimum specic grid width
--G - maximum specic grid width
 
 ``````
 ## Description
