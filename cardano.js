@@ -1,74 +1,85 @@
 #!/usr/bin/node
+const fs = require('fs')
 const util=require("node-util")
+const DEFAULT_MIRROR_FILE='mirror.def'
+const DEFAULT_RABUS_FILE='rabuses.def'
+const DEFAULT_SPECIAL_FILE='special.list'
+const DEFAULT_DICTIONARY='words.list'
+const HIGHLIGHT=' style="color:red;"'
+
 let argv = minimist(process.argv.slice(2));
 const DEBUG=argv['d'] || false
 const VERBOSE=argv['v'] || false
 const PRINT_GRID=argv['p'] || false
-const REVERSE_IT=argv['R'] ? false : true
+const REVERSE_IT=argv['r'] ? false : true
+const MINIMUM_GRID_WIDTH=argv['g']||3
+const MAXIMUM_GRID_WIDTH=argv['G']
+const MINIMUM_WORD_LENGTH=argv['w']||3
+const MIRROR_FILE=argv['M'] 
+const RABUS_FILE=argv['R'] 
+const SPECIAL_FILE=argv['A']
+const DICTIONARY_FILE=argv['D']
+const OUTPUT_FILE=argv['O']
+const PRINT_ALL=argv['P']
+const PRINT_SPECIFIC=argv['p']
 if (DEBUG) console.log("REVERSE="+REVERSE_IT)
 let CARDANOS=argv['_']
 if (CARDANOS.length === 0){
 	console.error("Usage: cardano.js [options] <list of cardano files to test>")
-	console.error(" -D [file] - dictionary/vocabulary file. defalut words.list")
-	console.error(" -r [file] - specific rabuses file, default rabuses.def")
-	console.error(" -m [file] - specific rabuses to mirror file, default mirrors.def")
-	console.error(" -s [file] - specific special  (to be anagrammised) vocabulary file, default special.list")
-	console.error(" -X [file] - output HTML to file")
+	console.error(" -D [file] - dictionary/vocabulary file. try -D "+DEFAULT_DICTIONARY)
+	console.error(" -A [file] - dictionary be anagrammised file, try -A "+DEFAULT_SPECIAL_FILE )
+	console.error(" -R [file] - rabuses file, try -R "+DEFAULT_RABUS_FILE)
+	console.error(" -M [file] - rabuses to mirror file, try -M "+DEFAULT_MIRROR_FILE )
+	console.error(" -O [file] - output HTML to file")
 	console.error(" ")
 	console.error(" -p [grid width] - print grid of given width")
-	console.error(" -w - minimum word length, default is 4, you may wish for TTT or IHS etc")
-	console.error(" -v - verbose output, includes coordinate strings of all matches")
-	console.error(" -d [debug level] - produce debug output to given debug level")
-	console.error(" -R - turn reverse searching off, default is to search backwards and forwards")
+	console.error(" -P print grid all grids")
 	console.error(" -g - minimum specic grid width")
 	console.error(" -G - maximum specic grid width")
+	console.error(" -w - minimum word length to filter dictionary, default is 3")
+	console.error(" -v - verbose output, includes coordinate strings of all matches")
+	console.error(" -d [debug level] - produce debug output to given debug level")
+	console.error(" -r - turn reverse searching off, default is to search backwards and forwards")
 
 	process.exit()
 }
-const MINIMUM_GRID_WIDTH=argv['g']||3
-const MAXIMUM_GRID_WIDTH=argv['G']
-const DEFAULT_MIRROR_FILE='mirror.def'
-const MIRROR_FILE=argv['m'] || DEFAULT_MIRROR_FILE
-const DEFAULT_RABUS_FILE='rabuses.def'
-const RABUS_FILE=argv['r'] || DEFAULT_RABUS_FILE
-const DEFAULT_SPECIAL_FILE='special.list'
-const SPECIAL_FILE=argv['s'] || DEFAULT_SPECIAL_FILE
-const DEFAULT_DICTIONARY='words.list'
-const DICTIONARY=argv['D']||DEFAULT_DICTIONARY
-const EXCEL_FILE=argv['X']
-const HIGHLIGHT=' style="color:red;"'
 
-const MINIMUM_WORD_LENGTH=argv['w']||4
-const fs = require('fs')
+
 let Specials={}
 let Avalue="A".charCodeAt(0);
 let rabusId=1
 let rabuses=getRabuses()
+if (!rabuses.length)
+	console.error("*** WARNING ***, You have no rabuses defined ")
+if (!RABUS_FILE && !MIRROR_FILE)
+	console.error("you need to specify a rabus file with -R or -M ")
 if (DEBUG>2){
 	console.log("RABUSES")
 	console.log(util.inspect(rabuses, {showHidden: false, depth: null, colors: true}))
 }
-let BIG_REGEXP=getExpression(DICTIONARY)
-let lastgrids=undefined
+let BIG_REGEXP=getExpression(DICTIONARY_FILE)
+let grids=undefined
 CARDANOS.map(cardano=>{
 	let data=getObject(cardano)
-	let grids=getGrids(data)
-		.map(ScanGrid)
+	let unsorted=getGrids(data).map(ScanGrid)
+	grids=unsorted
 		.sort((b,a) => (a.score > b.score) ? 1 : ((b.score > a.score) ? -1 : 0))
 		.sort((b,a) => (a.instances > b.instances) ? 1 : ((b.instances > a.instances) ? -1 : 0))
-//		.sort((b,a) => (a.instances > b.instances) ? 1 : ((b.instances > a.instances) ? -1 :
-//			(a.score > b.score) ? 1 : ((b.score > a.score) ? -1 : 0))
-//		)
 
 	let best=grids.filter(g=>g.instances === grids[0].instances).map(g=>g.grid[0].length)
 
 	if (grids[0].instances==0){
-		if (DEBUG)console.log(" *** NOTHING MATCHED ***")
-		return
+		console.log(" *** NOTHING MATCHED ***")
 	} 
 
 	console.log("**FILE "+cardano+" BEST"+(best.length>1?'S':'')+" "+best+" SCORE "+[grids[0].instances,grids[0].score])
 	grids=grids.filter(g=>g.score)
+	if (PRINT_ALL)
+		grids=unsorted
+
+	if (PRINT_SPECIFIC)
+		grids=unsorted.filter(g=>g.grid[0].length == PRINT_SPECIFIC)
+
 
 if (DEBUG>2) console.log(util.inspect(grids, {showHidden: false, depth: null, colors: true}))
 
@@ -76,12 +87,9 @@ if (DEBUG>2) console.log(util.inspect(grids, {showHidden: false, depth: null, co
 		grids.map(g=>console.log([g.grid[0].length,g.score,g.hits.length,g.hits.map(h=>h.match+"@"+h.address+"("+h.score+")")]))
 	else
 		grids.map(g=>console.log([g.grid[0].length,g.score,g.hits.length]))
-	if (PRINT_GRID)
-		getGrid(data,PRINT_GRID).map(l=>console.log(l.join('')))
-	lastgrids=grids
 })
-if (EXCEL_FILE){
-	OutputHTML(EXCEL_FILE,lastgrids)
+if (OUTPUT_FILE){
+	OutputHTML(OUTPUT_FILE,grids)
 }
 
 
@@ -133,7 +141,7 @@ if (DEBUG>1)console.log("COORDS="+coord)
 
 function getExpression(dictionary){
 	let words=[]
-	let special=getWords(SPECIAL_FILE,2).map(latinize)
+	let special=SPECIAL_FILE ? getWords(SPECIAL_FILE,2).map(latinize) : []
 	special.map(s=>{
 		Specials[s]=1;
 		words=words.concat(permutator(s))
@@ -147,6 +155,8 @@ if (DEBUG) console.log("DICTIONARY SIZE="+words.length)
 	let exp=words.join('|')
 	if (!words.length) {
 		console.error("*** WARNING ***, There are no words in your dictionary.")
+		if (!DICTIONARY_FILE && !SPECIAL_FILE)
+			console.error("you need to specify a dictionary file with -D or -A ")
 		console.error("This may be due to a minimum word length of "+MINIMUM_WORD_LENGTH+" being set")
 		console.error("use -w [minimum word size] to inlude shorter words")
 	}
@@ -361,6 +371,8 @@ function getInstances(rabus,grid){
 }
 
 function getWords(file,length){
+	if (!file)
+		return []
 	let data
 	length=length || MINIMUM_WORD_LENGTH
 	try {
@@ -375,7 +387,7 @@ if (DEBUG) console.log("WORD DATA="+data)
 
 function getRabuses(){
 	let rabuses=getRabuseFile(RABUS_FILE)
-	let mirror=getRabuseFile(MIRROR_FILE) || []
+	let mirror=getRabuseFile(MIRROR_FILE)
 	let order=1
 	let flipped=mirror.map(r=> {
 		let out={
@@ -397,6 +409,9 @@ if (DEBUG>1)console.log("FLIP ROW "+c.row+" FROM H "+r.height+" TO "+(r.height-c
 }
 
 function getRabuseFile(file){
+if (DEBUG)console.log("READING RABUS FILE "+file )
+	if (!file)
+		return []
 	let data
 	try {
 		data = fs.readFileSync(file, 'utf8')
