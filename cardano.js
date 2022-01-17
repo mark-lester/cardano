@@ -66,20 +66,19 @@ CARDANOS.map(cardano=>{
 		.sort((b,a) => (a.score > b.score) ? 1 : ((b.score > a.score) ? -1 : 0))
 		.sort((b,a) => (a.instances > b.instances) ? 1 : ((b.instances > a.instances) ? -1 : 0))
 
-	let best=grids.filter(g=>g.instances === grids[0].instances).map(g=>g.grid[0].length)
+	let best=grids.filter(g=>g.instances === grids[0].instances **g.score).map(g=>g.grid[0].length)
 
 	if (grids[0].instances==0){
-		console.log(" *** NOTHING MATCHED ***")
-	} 
-
-	console.log("**FILE "+cardano+" BEST"+(best.length>1?'S':'')+" "+best+" SCORE "+[grids[0].instances,grids[0].score])
+		console.log("*** NOTHING MATCHED "+cardano+" ***")
+	} else {
+		console.log("*** FILE "+cardano+" BEST"+(best.length>1?'S':'')+" "+best+" SCORE "+[grids[0].instances,grids[0].score] +" ***")
+	}
 	grids=grids.filter(g=>g.score)
 	if (PRINT_ALL)
 		grids=unsorted
 
 	if (PRINT_SPECIFIC)
 		grids=unsorted.filter(g=>g.grid[0].length == PRINT_SPECIFIC)
-
 
 if (DEBUG>2) console.log(util.inspect(grids, {showHidden: false, depth: null, colors: true}))
 
