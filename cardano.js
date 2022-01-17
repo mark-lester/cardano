@@ -13,6 +13,7 @@ if (CARDANOS.length === 0){
 	console.error(" -r [file] - specific rabuses file, default rabuses.def")
 	console.error(" -m [file] - specific rabuses to mirror file, default mirrors.def")
 	console.error(" -s [file] - specific special  (to be anagrammised) vocabulary file, default special.list")
+	console.error(" -X [file] - output HTML to file")
 	console.error(" ")
 	console.error(" -p [grid width] - print grid of given width")
 	console.error(" -w - minimum word length, default is 4, you may wish for TTT or IHS etc")
@@ -35,6 +36,7 @@ const SPECIAL_FILE=argv['s'] || DEFAULT_SPECIAL_FILE
 const DEFAULT_DICTIONARY='words.list'
 const DICTIONARY=argv['D']||DEFAULT_DICTIONARY
 const EXCEL_FILE=argv['X']
+const HIGHLIGHT=' style="color:red;"'
 
 const MINIMUM_WORD_LENGTH=argv['w']||4
 const fs = require('fs')
@@ -67,8 +69,8 @@ CARDANOS.map(cardano=>{
 
 	console.log("**FILE "+cardano+" BEST"+(best.length>1?'S':'')+" "+best+" SCORE "+[grids[0].instances,grids[0].score])
 	grids=grids.filter(g=>g.score)
-	if (DEBUG>2)
-		console.log(util.inspect(grids, {showHidden: false, depth: null, colors: true}))
+
+if (DEBUG>2) console.log(util.inspect(grids, {showHidden: false, depth: null, colors: true}))
 
 	if (VERBOSE)
 		grids.map(g=>console.log([g.grid[0].length,g.score,g.hits.length,g.hits.map(h=>h.match+"@"+h.address+"("+h.score+")")]))
@@ -79,60 +81,55 @@ CARDANOS.map(cardano=>{
 	lastgrids=grids
 })
 if (EXCEL_FILE){
-	OutputXL(EXCEL_FILE,lastgrids)
+	OutputHTML(EXCEL_FILE,lastgrids)
 }
 
 
 
-function OutputXL(filename,grids){
-	var xl = require('excel4node');
- 
-	var wb = new xl.Workbook();
-	wb.writeP = util.promisify(wb.write)
-	console.log("WRITING FILE "+filename)
-	return wb.write(filename)
+function OutputHTML(filename,grids){
+	let cube=grids.map(Grid)
+	function Grid(grid){
+		let out= grid.grid.map(Line)
+if (DEBUG>1)console.log("OUTPUT GRID="+util.inspect(out, {showHidden: false, depth: null, colors: true}))
+		grid.hits.map(colourHit)
+		return out
 
-	var Normal = wb.createStyle({
-		font: {
-			color: 'black',
-			size: 12,
-		},
-	});
-	var Highlight = wb.createStyle({
-		font: {
-			color: 'red',
-			size: 16,
-		},
-	});
-
-	function addSheet(grid){
-		let lineNumber=1
-		var ws = wb.addWorksheet('Width '+grid.grid[0].length);
-
-		function addLine(line){
-			let cellNumber=1
-			function addCell(value){
-				ws.cell(lineNumber,cellNumber++).string(value).style(Normal)
+		function Line(line){
+			return line.map(Cell)
+			function Cell(value){
+				return {
+					style:'',
+					value:value
+				}
 			}
-			line.map(addCell)
-			lineNumber++
 		}
 		function colourHit(hit){
 			hit.address.split(/,/).map(c=>{
 				coord=c.split(/:/)
-				ws.cell(coord[0],coord[1]).style(Highlight)
+if (DEBUG>1)console.log("COORDS="+coord)
+				out[coord[1]-1][coord[0]-1].style=HIGHLIGHT
 			})
 		}
-		grid.grid.map(addLine)
-		grid.hits.map(colourHit)
+	}
+	let out=cube.map(Table).join("<p>\n")
+	function Table(table){
+		return table[0].length+"<br><table border=1>\n"+
+			table.map(Line).join("\n")+
+			"</table>\n"
+
+		function Line(line){
+			return "<tr>\n"+
+				line.map(Cell).join("\n")+
+				"</tr>\n"
+			function Cell(cell){
+				return "<td"+cell.style+">\n"+ cell.value+ "</td>"
+			}
+		}
 	}
 
-	grids.map(addSheet)
-	console.log("WRITING AFAIN FILE "+filename)
-	return wb.writeP(filename)
+	return fs.writeFileSync(filename,out)
 }
 
-			
 
 function getExpression(dictionary){
 	let words=[]
@@ -170,7 +167,7 @@ if (DEBUG > 1)console.log("LATINIZING "+text)
 //		.replace(/F/,'S')
 }
 
-function findStuff(exp,s){
+function findStuff(exp,s,reversed){
 	let m
 	let output=[]
 	do {
@@ -182,7 +179,8 @@ function findStuff(exp,s){
 if (DEBUG) console.log("MATCH="+m[0])
 			output.push({
 				match:m[0],
-				start:m.index
+				start:m.index,
+				reversed:reversed
     			})
 		}
 	} while (m);
@@ -235,17 +233,21 @@ if (DEBUG > 1) console.log("SEARCH "+i.text)
 			let hits=findStuff(BIG_REGEXP,i.text)
 			if (REVERSE_IT){
 if (DEBUG>1) console.log("REVERSE="+i.reversal)
-				hits=hits.concat(findStuff(BIG_REGEXP,i.reversal))
+				let reversed=findStuff(BIG_REGEXP,i.reversal,true)
+				hits=hits.concat(reversed)
 			}
 
 			if (!hits.length)
 				return
 			instanceId++
+if (DEBUG>1)console.log("INSTANCE="+util.inspect(i, {showHidden: false, depth: null, colors: true}))
+if (DEBUG>1)console.log("HITS="+util.inspect(hits, {showHidden: false, depth: null, colors: true}))
 			hits.map(m=>{
-if (DEBUG) console.log("INSERT MATCH "+m.match)
+if (DEBUG) console.log("INSERT MATCH "+m.match+" REVRSED = "+m.reversed)
 				m.rabus=r
 				m.instanceId=instanceId
 				m.address=codify(r,i,m)
+if (DEBUG) console.log("INSERT ADDRESS "+m.address)
 				m.address.split(/,/).map(c=>{
 					iused[c]=cused[c]=true
 				})
@@ -315,7 +317,11 @@ if (DEBUG) console.log("REDUCED HITS "+output.hits.length+" SCORE "+output.score
 }
 
 function codify(r,i,m){
-	let cstring=r.cells.slice(i,m.match.length).map(c=>{
+	let cells=m.reversed ? r.reversed : r.cells
+if (DEBUG>1)console.log("CODING FROM "+m.start+" ON "+m.match+" REV="+m.reversed) 
+if (DEBUG>1)console.log("CONTENT="+util.inspect(cells, {showHidden: false, depth: null, colors: true}))
+if (DEBUG>1)console.log("RABUS="+util.inspect(r, {showHidden: false, depth: null, colors: false}))
+	let cstring=cells.slice(m.start,m.start+m.match.length).map(c=>{
 		return (c.col+i.ox+1) +":"+ (c.row+i.oy+1)
 	})
 	.sort()
@@ -351,7 +357,7 @@ function getInstances(rabus,grid){
 			output.push(pluckInstance(rabus,grid,ox,oy))
 		}
 	}
-	return output
+	return output.filter(o=>o!==undefined)
 }
 
 function getWords(file,length){
@@ -371,7 +377,8 @@ function getRabuses(){
 	let rabuses=getRabuseFile(RABUS_FILE)
 	let mirror=getRabuseFile(MIRROR_FILE) || []
 	let order=1
-	let flipped=mirror.map(r=> ( {
+	let flipped=mirror.map(r=> {
+		let out={
 			width:r.width,
 			height:r.height,
 			cells: r.cells.slice(0).reverse().map(c=>{
@@ -381,8 +388,10 @@ if (DEBUG>1)console.log("FLIP ROW "+c.row+" FROM H "+r.height+" TO "+(r.height-c
 				c.order=order++
 				return c
 			})
-		})
-	)
+		}
+		out.reversed=out.cells.slice(0).reverse().map(c=>{c.order=order++;return c})
+		return out
+	})
 
 	return mirror.concat(flipped).concat(rabuses)
 }
@@ -418,7 +427,11 @@ function pluckInstance(rabus,grid,ox,oy){
 		return grid[oy+cell.row][ox+cell.col]
 	}
 	var text=rabus.cells.map(pluckCell).join('')
+	if (text.length != rabus.cells.length)
+		return undefined
+
 	var reversal=REVERSE_IT ? text.split('').slice(0).reverse().join('') : ''
+if (DEBUG>1)console.log("TEXT="+text+" REVERSAL="+reversal)
 	return {
 		rabus:rabus,
 		ox:ox,
@@ -457,11 +470,13 @@ function parseRabus(def){
 		.filter(c=>c!=undefined)
 		.sort((a,b) => (a.order > b.order) ? 1 : ((b.order > a.order) ? -1 : 0))
 
+	let order=1
 	return {
 		id:rabusId++,
 		width:width,
 		height:row,
-		cells:cells
+		cells:cells,
+		reversed:cells.slice(0).reverse().map(c=>{c.order=order++;return c})
 	}
 }
 
