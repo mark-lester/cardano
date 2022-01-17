@@ -61,6 +61,7 @@ let BIG_REGEXP=getExpression(DICTIONARY_FILE)
 let grids=undefined
 CARDANOS.map(cardano=>{
 	let data=getObject(cardano)
+if (DEBUG>1)console.log("CARDANO DATA "+util.inspect(data, {showHidden: false, depth: null, colors: true}))
 	let unsorted=getGrids(data).map(ScanGrid)
 	grids=unsorted
 		.sort((b,a) => (a.score > b.score) ? 1 : ((b.score > a.score) ? -1 : 0))
@@ -140,6 +141,7 @@ if (DEBUG>1)console.log("COORDS="+coord)
 
 function getExpression(dictionary){
 	let words=[]
+if (DEBUG) console.log("SPECISAL FILE="+SPECIAL_FILE)
 	let special=SPECIAL_FILE ? getWords(SPECIAL_FILE,2).map(latinize) : []
 	special.map(s=>{
 		Specials[s]=1;
@@ -228,7 +230,7 @@ const Sum = (accumulator, curr) => accumulator + curr;
 		scores:[],
 		grid:grid
 	}
-if (DEBUG) console.log("GRID WIDTH "+grid[0].length)
+if (DEBUG) console.log("SCAN GRID WIDTH "+grid[0].length)
 if (DEBUG > 1) grid.map(g=>console.log(g.join('')))
 
 	let instanceId=0
