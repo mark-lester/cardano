@@ -1,5 +1,9 @@
-//   ["A", "G dot", 4349, 4085], //   ["A", "G dot", 4305, 4085],
+#!/usr/bin/node
 const util=require("node-util")
+let argv = require('minimist')(process.argv.slice(2));
+const DEBUG=argv['d']
+const fs = require('fs')
+//const util=require("node-util")
 const pi = Math.PI;
 const phi= (1 + Math.sqrt(5))/2
 const root3=Math.sqrt(3)
@@ -17,21 +21,37 @@ console.log("B2 "+B2)
 
 const Sum = (accumulator, curr) => accumulator + curr;
 
+//   ["A", "G dot", 4349, 4085], //   ["A", "G dot", 4305, 4085],
 const RAD2DEG=180/pi
 let data=[
+//   ["A", "G dot", 4324, 4063],
+//   ["A", "G dot", 4330, 4086],
+//   ["A", "G dot", 4347, 4070],
    ["A", "G dot", 4330, 4086],
    ["B", "imprinted dot", 5749, 2526],
    ["C", "top line right", 6070, 3082],
    ["D", "bottom line right", 6080, 3448],
-   ["E", "Aspley dot", 5579, 4222],
-   ["F", "9 dot", 5072, 4361],
+   ["E", "Aspley dot", 5598, 4226],
+//   ["E", "Aspley dot", 5570, 4243],
+   ["F", "9 dot",5075, 4362],
    ["G", "Tau dot", 5056, 4084],
-   ["H", "top line left", 3657, 3065],
-   ["I", "bottom line left", 3636, 3443],
+   ["H", "top line left", 3640, 3062],
+   ["I", "bottom line left", 3654, 3446],
    ["J", "T square dot", 5170, 4189],
-   ["K", "P bottom", 5022, 1365],
+   ["K", "P bottom", 5012, 1365],
    ["L", "P top", 5018, 1130],
+// others below beware
+   ["R", "T-square top", 5207,3986],
+   ["S", "T-square bottom", 5165, 4098],
+   ["T", "AT LONDON A top", 4582, 3820],
+   ["U", "AT LONDON A bottom", 4612, 3908],
+   ["V", "AT LONDON D top", 5108, 3828],
+   ["W", "AT LONDON D bottom", 5111, 3894],
+   ["Z", "between u and e", 4359, 2499],
+   ["1", "between e and r", 5810, 4029],
 ]
+
+
 
 
 let POINTS={}
@@ -49,6 +69,13 @@ data=data.map(line=>{
 POINTS['M']=MidPoint('AB','M')
 POINTS['N']=Intersection('FH','AB','N')
 POINTS['O']=Intersection('KF','AB','O')
+POINTS['X']=rotate(POINTS['M'],POINTS['A'],90,'X','"are" bottom right Chi' )
+POINTS['Y']=rotate(POINTS['M'],POINTS['B'],90,'Y','Neuer, top left Chi')
+console.log("ROTATE="+[POINTS['X'].x,POINTS['X'].y])
+console.log("ROTATE="+[POINTS['Y'].x,POINTS['Y'].y])
+
+let alans_measure=35.95
+let SCALE=LLength('AC')/alans_measure
 let CIRCLE={
 	center:POINTS['M'],
 	radius:LLength('AB')/2
@@ -67,10 +94,8 @@ let BOT_PLINE={
 
 const THRESHOLD=50
 interset= inteceptCircleLineSeg(CIRCLE, TOP_PLINE).filter(NotNearLine.bind(TOP_LINE))
-console.log("RESULTS="+interset.length)
 POINTS['P']=interset[0]
 interset= inteceptCircleLineSeg(CIRCLE, BOT_PLINE).filter(NotNearLine.bind(BOT_LINE))
-console.log("RESULTS="+interset.length)
 POINTS['Q']=interset[0]
 
 function NotNearLine(point){
@@ -78,12 +103,8 @@ function NotNearLine(point){
 }
 function NearPoint(point){
 	let distance=Length(point,this)
-console.log("DISTANCE="+distance)
 	return (distance < THRESHOLD)
 }
-
-console.log(util.inspect(POINTS['P'], {showHidden: false, depth: null, colors: true}))
-console.log(util.inspect(POINTS['Q'], {showHidden: false, depth: null, colors: true}))
 
 let triangles="ACB,ADB,AEB,AFB,CFH,BAI,GFM,KFM,BNH,APB,AQB".split(/,/)
 let results={}
@@ -92,21 +113,27 @@ triangles
 .map(Process)
 .map(r=>{
 	//console.log(r.triangle+"="+r.angle+", "+POINTS[r.names[1]].desc)
-	console.log(util.inspect(r, {showHidden: false, depth: null, colors: true}))
+if (DEBUG)console.log(util.inspect(r, {showHidden: false, depth: null, colors: true}))
 	results[r.triangle]=r
 })
 let radius=LLength('AB')/2
 
 
-console.log(util.inspect(results, {showHidden: false, depth: null, colors: true}))
-console.log(util.inspect(POINTS, {showHidden: false, depth: null, colors: true}))
+if (DEBUG) console.log(util.inspect(results, {showHidden: false, depth: null, colors: true}))
+if (DEBUG) console.log(util.inspect(POINTS, {showHidden: false, depth: null, colors: true}))
 rf=(n,f)=>results[n][f]
 Assert(rf,pi,'ACB','invtan',"Pi")
 Assert(rf,B2,'ADB','invtan',"Brun's constant2")
 
 Assert( ()=>{return LLength("AE")/LLength("AF")},phi, "AE/AF","","Golden Ratio")
+Assert( ()=>{return LLength("AF")/LLength("AE")},phi-1, "AF/AE","","Golden Ratio Inverted")
+Assert( ()=>{return LLength("NH")/LLength("NF")},phi, "NH/NF","","Golden Ratio second")
+Assert( ()=>{return LLength("NH")/LLength("NF")},phi, "NH/NF","","Golden Ratio second")
 Assert( ()=>{return LLength("AC")/LLength("AD")},tri, "AC/AD","","Tribonacci")
 Assert( ()=>{return (LLength("BE")+LLength("BD"))/LLength("AB")},root3, "(BE+BD)/AB","","root3")
+Assert( rf,0.75,'AEB','invtan',"345 Triangle")
+Assert( rf,e,'AQB','tan',"Euler")
+Assert( rf,e-1,'APB','tan',"Euler - 1")
 Assert( rf,90,'ACB','midangle',"Right angle")
 Assert( rf,90,'ADB','midangle',"Right angle")
 Assert( rf,90,'AEB','midangle',"Right angle")
@@ -117,17 +144,25 @@ Assert( rf,90,'BAI','midangle',"Right angle")
 Assert( rf,90,'APB','midangle',"Right angle")
 Assert( rf,90,'AQB','midangle',"Right angle")
 
-Assert( rf,0.75,'AEB','invtan',"345 Triangle")
-Assert( rf,e,'AQB','tan',"Euler")
-Assert( rf,e-1,'APB','tan',"Euler - 1")
 
-"ABCDEF".split('').map(name=>{
+"ABCDEFPQO".split('').map(name=>{
 	Assert((name)=>LLength('M'+name),radius,name,""," Radius")
 })
 "ABCDEF".split('').map(name=>{
 	Assert((name)=>LLength('O'+name),radius,name,""," Radius from P")
 })
-Assert( ()=>LLength("OM"),0, "OM",""," test same")
+"U".split('').map(name=>{
+	Assert((name)=>LLength('N'+name)/SCALE,0,name,""," distance to derived AT interscetion ")
+})
+Assert((name)=>LLength('YZ'),0,"","","distance chi top left")
+Assert((name)=>LLength('X1'),0,"","","distance chi bottom right")
+
+"RS".split('').map(name=>
+	Assert((name)=>distToSegment(POINTS[name],POINTS['F'],POINTS['B'])/SCALE,0,name,"", "FC to"))
+"TU".split('').map(name=>
+	Assert((name)=>distToSegment(POINTS[name],POINTS['F'],POINTS['H'])/SCALE,0,name,"", "FH to"))
+"VW".split('').map(name=>
+	Assert((name)=>distToSegment(POINTS[name],POINTS['F'],POINTS['K'])/SCALE,0,name,"", "FK to"))
 
 function Intersection(A,B,name){
 	points=(A)=>A.split('').map(a=>POINTS[a])
@@ -207,9 +242,9 @@ function Process(triangle){
 		midangle:Angle(A,B,C),
 		sinangle:Angle(A,C,B),
 		cosangle:Angle(B,C,A),
-		cosside:Length(A,C),
-		sinside:Length(B,C),
-		hypotenuse:Length(A,B),
+		cosside:Length(A,C)/SCALE,
+		sinside:Length(B,C)/SCALE,
+		hypotenuse:Length(A,B)/SCALE,
 	}
 	details.sin=details.sinside/details.hypotenuse
 	details.cos=details.cosside/details.hypotenuse
@@ -276,4 +311,27 @@ function inteceptCircleLineSeg(circle, line){
         ret[ret.length] = retP2;
     }       
     return ret;
+}
+function sqr(x) { return x * x }
+function dist2(v, w) { return sqr(v.x - w.x) + sqr(v.y - w.y) }
+function distToSegmentSquared(p, v, w) {
+  var l2 = dist2(v, w);
+  if (l2 == 0) return dist2(p, v);
+  var t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+  t = Math.max(0, Math.min(1, t));
+  return dist2(p, { x: v.x + t * (w.x - v.x),
+                    y: v.y + t * (w.y - v.y) });
+}
+function distToSegment(p, v, w) { return Math.sqrt(distToSegmentSquared(p, v, w))};
+
+function rotate(c,p, angle,name,desc) {
+	let radians = (Math.PI / 180) * angle
+	let cos = Math.cos(radians)
+	let sin = Math.sin(radians)
+	return {
+		x:(cos * (p.x - c.x)) + (sin * (p.y - c.y)) + c.x,
+		y:(cos * (p.y - c.y)) - (sin * (p.x - c.x)) + c.y,
+		name:name,
+		desc:desc
+	}
 }
