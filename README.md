@@ -7,20 +7,19 @@ node cardano.js [options] <list of cardano files to test>
 ### Options
 ```
  -D [file] - dictionary/vocabulary file. try -D words.list
- -A [file] - dictionary be anagrammised file, try -A special.list
+ -A [file] - dictionary to be anagrammised file, try -A special.list
  -R [file] - rabuses file, try -R rabuses.def
  -M [file] - rabuses to mirror file, try -M mirror.def
  -O [file] - output HTML to file
  
  -p [grid width] - print grid of given width
  -P print grid all grids
- -g - minimum specic grid width
- -G - maximum specic grid width
+ -g - minimum grid width
+ -G - maximum grid width
  -w - minimum word length to filter dictionary, default is 3
  -v - verbose output, includes coordinate strings of all matches
- -d [debug level] - produce debug output to given debug level
  -r - turn reverse searching off, default is to search backwards and forwards
-
+ -d [level] - debug to increasing levels of verbosity
 
 ``````
 ## Description
