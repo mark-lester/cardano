@@ -11,6 +11,8 @@ const gamma=0.5772156649
 const e=2.71828
 const B2=1.902160
 const tri=1.8392867
+let POINTS={}
+
 console.log("PI "+pi)
 console.log("PHI "+phi)
 console.log("PHI-1 "+(phi - 1))
@@ -20,6 +22,13 @@ console.log("e-1 "+(e-1))
 console.log("B2 "+B2)
 
 const Sum = (accumulator, curr) => accumulator + curr;
+const ACURATE={
+	C:[6070,3082],
+	D:[6080,3448],
+	E:[5598,4226],
+	F:[5075,4362],
+}
+
 
 //   ["A", "G dot", 4349, 4085], //   ["A", "G dot", 4305, 4085],
 const RAD2DEG=180/pi
@@ -29,11 +38,11 @@ let data=[
 //   ["A", "G dot", 4347, 4070],
    ["A", "G dot", 4330, 4086],
    ["B", "imprinted dot", 5749, 2526],
-   ["C", "top line right", 6070, 3082],
-   ["D", "bottom line right", 6080, 3448],
-   ["E", "Aspley dot", 5598, 4226],
+   ["C", "top line right", 6070, 3082,1/pi],
+   ["D", "bottom line right", 6080, 3448,1/B2],
+   ["E", "Aspley dot", 5598, 4226,4/3],
 //   ["E", "Aspley dot", 5570, 4243],
-   ["F", "9 dot",5075, 4362],
+   ["F", "9 dot",5075, 4362,1/Math.tan(Math.asin(0.6/phi))],
    ["G", "Tau dot", 5056, 4084],
    ["H", "top line left", 3640, 3062],
    ["I", "bottom line left", 3654, 3446],
@@ -51,28 +60,34 @@ let data=[
    ["1", "between e and r", 5810, 4029],
 ]
 
-
-
-
-let POINTS={}
 data=data.map(line=>{
 	return {
 		name:line[0],
 		desc:line[1],
 		x:line[2],
-		y:line[3]
+		y:line[3],
+		source_tan:line[4]
 	}
 })
 .map(point=>{
 	POINTS[point.name]=point
 })
+
+if (argv['a'])
+	Object.keys(ACURATE).map(c=>{
+		let p=POINTS[c]
+		p.x=ACURATE[c][0]
+		p.y=ACURATE[c][1]
+	})
+		
+
 POINTS['M']=MidPoint('AB','M')
 POINTS['N']=Intersection('FH','AB','N')
 POINTS['O']=Intersection('KF','AB','O')
 POINTS['X']=rotate(POINTS['M'],POINTS['A'],90,'X','"are" bottom right Chi' )
 POINTS['Y']=rotate(POINTS['M'],POINTS['B'],90,'Y','Neuer, top left Chi')
-console.log("ROTATE="+[POINTS['X'].x,POINTS['X'].y])
-console.log("ROTATE="+[POINTS['Y'].x,POINTS['Y'].y])
+console.log("DIAMETER ROTATE="+[POINTS['X'].x,POINTS['X'].y])
+console.log("DIAMETER ROTATE="+[POINTS['Y'].x,POINTS['Y'].y])
 
 let alans_measure=35.95
 let SCALE=LLength('AC')/alans_measure
@@ -95,16 +110,20 @@ let BOT_PLINE={
 const THRESHOLD=50
 interset= inteceptCircleLineSeg(CIRCLE, TOP_PLINE).filter(NotNearLine.bind(TOP_LINE))
 POINTS['P']=interset[0]
+POINTS['P'].source_tan=1-e
+POINTS['P'].desc="natural base"
+
 interset= inteceptCircleLineSeg(CIRCLE, BOT_PLINE).filter(NotNearLine.bind(BOT_LINE))
 POINTS['Q']=interset[0]
+POINTS['Q'].source_tan=-e
+POINTS['Q'].desc="e-1"
 
-function NotNearLine(point){
-	return this.filter(NearPoint.bind(point)).length == 0
-}
-function NearPoint(point){
-	let distance=Length(point,this)
-	return (distance < THRESHOLD)
-}
+"CDEFPQ".split('').map(c=>{
+	POINTS[c.toLowerCase()]=MapOntoLine(POINTS['A'],POINTS['B'],POINTS[c].source_tan,c.toLowerCase())
+console.log("GENNED FOR "+c+"="+[POINTS[c].x,POINTS[c].y])
+	Assert((name)=>10*LLength(c+c.toLowerCase())/SCALE,0,"","","distance to acurate  "+POINTS[c].desc)
+})
+
 
 let triangles="ACB,ADB,AEB,AFB,CFH,BAI,GFM,KFM,BNH,APB,AQB".split(/,/)
 let results={}
@@ -129,8 +148,8 @@ Assert( ()=>{return LLength("AE")/LLength("AF")},phi, "AE/AF","","Golden Ratio")
 Assert( ()=>{return LLength("AF")/LLength("AE")},phi-1, "AF/AE","","Golden Ratio Inverted")
 Assert( ()=>{return LLength("NH")/LLength("NF")},phi, "NH/NF","","Golden Ratio second")
 Assert( ()=>{return LLength("NH")/LLength("NF")},phi, "NH/NF","","Golden Ratio second")
-Assert( ()=>{return LLength("AC")/LLength("AD")},tri, "AC/AD","","Tribonacci")
-Assert( ()=>{return (LLength("BE")+LLength("BD"))/LLength("AB")},root3, "(BE+BD)/AB","","root3")
+Assert( ()=>{return (LLength("AB")+LLength("AE"))/LLength("AD")},tri, "AC/AD","","Tribonacci")
+Assert( ()=>{return (LLength("BE")+LLength("BF"))/LLength("AB")},root3, "(BE+BD)/AB","","root3")
 Assert( rf,0.75,'AEB','invtan',"345 Triangle")
 Assert( rf,e,'AQB','tan',"Euler")
 Assert( rf,e-1,'APB','tan',"Euler - 1")
@@ -164,6 +183,13 @@ Assert((name)=>LLength('X1'),0,"","","distance chi bottom right")
 "VW".split('').map(name=>
 	Assert((name)=>distToSegment(POINTS[name],POINTS['F'],POINTS['K'])/SCALE,0,name,"", "FK to"))
 
+function NotNearLine(point){
+	return this.filter(NearPoint.bind(point)).length == 0
+}
+function NearPoint(point){
+	let distance=Length(point,this)
+	return (distance < THRESHOLD)
+}
 function Intersection(A,B,name){
 	points=(A)=>A.split('').map(a=>POINTS[a])
 	let a=points(A)
@@ -326,12 +352,47 @@ function distToSegment(p, v, w) { return Math.sqrt(distToSegmentSquared(p, v, w)
 
 function rotate(c,p, angle,name,desc) {
 	let radians = (Math.PI / 180) * angle
+	return Rotate(c,p,radians,name,desc)
+}
+function Rotate(c,p, radians,name,desc) {
 	let cos = Math.cos(radians)
 	let sin = Math.sin(radians)
+if (DEBUG)console.log("ROTATING "+[c.x,c.y,p.x,p.y,radians,name,desc,sin,cos])
 	return {
 		x:(cos * (p.x - c.x)) + (sin * (p.y - c.y)) + c.x,
-		y:(cos * (p.y - c.y)) - (sin * (p.x - c.x)) + c.y,
+		y:(cos * (p.y - c.y)) + (sin * (p.x - c.x)) + c.y,
 		name:name,
 		desc:desc
 	}
+}
+
+function degs(rads){
+	return rads*180/pi
+}
+
+function MapOntoLine(a,b,tan,name){
+if (DEBUG)console.log("test "+Math.sin(pi/4))
+if (DEBUG)console.log("A "+[a.x,a.y])
+if (DEBUG)console.log("B "+[b.x,b.y])
+if (DEBUG)console.log("TANGENT "+tan)
+	let angle=-Math.atan(tan)
+if (DEBUG)console.log("ANGLE "+degs(angle))
+	let cos=Math.cos(angle)
+if (DEBUG)console.log("COSINE "+cos)
+	let tangle=Math.atan((a.y-b.y)/(a.x-b.x))
+if (DEBUG)console.log("TANGLE "+degs(tangle))
+	let rangle=tangle-angle
+if (DEBUG)console.log("RANGLE "+degs(rangle))
+	let scale = Length(a,b)
+if (DEBUG)console.log("SCALE "+scale)
+	
+	let transformed={
+		x:a.x+(cos*scale),
+		y:a.y
+	}
+if (DEBUG)console.log("TRANSFORM "+[transformed.x,transformed.y])
+	
+	let out= Rotate(a,transformed,rangle,name,name+" generated from source tangent")
+if (DEBUG)console.log("OUT "+[out.x,out.y])
+	return out
 }
