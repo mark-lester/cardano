@@ -6,7 +6,10 @@ const fs = require('fs')
 //const util=require("node-util")
 const pi = Math.PI;
 const phi= (1 + Math.sqrt(5))/2
+const root2=Math.sqrt(2)
 const root3=Math.sqrt(3)
+const root5=Math.sqrt(5)
+const root6=Math.sqrt(6)
 const gamma=0.5772156649
 const e=2.71828
 const B2=1.902160
@@ -73,56 +76,101 @@ data=data.map(line=>{
 	POINTS[point.name]=point
 })
 
+/*
 if (argv['a'])
 	Object.keys(ACURATE).map(c=>{
 		let p=POINTS[c]
 		p.x=ACURATE[c][0]
 		p.y=ACURATE[c][1]
 	})
-		
-
-POINTS['M']=MidPoint('AB','M')
-POINTS['N']=Intersection('FH','AB','N')
-POINTS['O']=Intersection('KF','AB','O')
-POINTS['X']=rotate(POINTS['M'],POINTS['A'],90,'X','"are" bottom right Chi' )
-POINTS['Y']=rotate(POINTS['M'],POINTS['B'],90,'Y','Neuer, top left Chi')
-console.log("DIAMETER ROTATE="+[POINTS['X'].x,POINTS['X'].y])
-console.log("DIAMETER ROTATE="+[POINTS['Y'].x,POINTS['Y'].y])
-
+*/
 let alans_measure=35.95
 let SCALE=LLength('AC')/alans_measure
-let CIRCLE={
-	center:POINTS['M'],
-	radius:LLength('AB')/2
-}
-let TOP_LINE=[ POINTS['C'], POINTS['H']]
-let TOP_PLINE={
-	p1:TOP_LINE[0],
-	p2:TOP_LINE[1]
-}
-
-let BOT_LINE=[ POINTS['D'], POINTS['I']]
-let BOT_PLINE={
-	p1:BOT_LINE[0],
-	p2:BOT_LINE[1]
-}
-
 const THRESHOLD=50
-interset= inteceptCircleLineSeg(CIRCLE, TOP_PLINE).filter(NotNearLine.bind(TOP_LINE))
-POINTS['P']=interset[0]
-POINTS['P'].source_tan=1-e
-POINTS['P'].desc="natural base"
+		
+generate()
+generate_secondary()
+function generate(){
+	POINTS['M']=MidPoint('AB','M')
+	POINTS['N']=Intersection('FH','AB','N')
+	POINTS['O']=Intersection('KF','AB','O')
+	POINTS['X']=rotate(POINTS['M'],POINTS['A'],90,'X','"are" bottom right Chi' )
+	POINTS['Y']=rotate(POINTS['M'],POINTS['B'],90,'Y','Neuer, top left Chi')
+}
 
-interset= inteceptCircleLineSeg(CIRCLE, BOT_PLINE).filter(NotNearLine.bind(BOT_LINE))
-POINTS['Q']=interset[0]
-POINTS['Q'].source_tan=-e
-POINTS['Q'].desc="e-1"
+function generate_secondary(derived){
+	let CIRCLE={
+		center:POINTS['M'],
+		radius:LLength('AB')/2
+	}
+	if (derived===true){
+		deltay=POINTS['A'].x -POINTS['B'].x 
+		deltax=-POINTS['A'].y +POINTS['B'].y 
+		POINTS['8']={
+			x:POINTS['F'].x+deltax,
+			y:POINTS['F'].y+deltay,
+			name:'8',
+			desc:'dummy point for parallel top line'
+		}
+		let h={
+			x:POINTS['H'].x,
+			y:POINTS['H'].y
+		}
+		POINTS['H']=Intersection('CP','F8','H')
+		let dh=Length(h,POINTS['H'])
+console.log("Top left "+dh)
 
-"CDEFPQ".split('').map(c=>{
-	POINTS[c.toLowerCase()]=MapOntoLine(POINTS['A'],POINTS['B'],POINTS[c].source_tan,c.toLowerCase())
-console.log("GENNED FOR "+c+"="+[POINTS[c].x,POINTS[c].y])
-	Assert((name)=>10*LLength(c+c.toLowerCase())/SCALE,0,"","","distance to acurate  "+POINTS[c].desc)
+		POINTS['9']={
+			x:POINTS['A'].x+deltax,
+			y:POINTS['A'].y+deltay,
+			name:'9',
+			desc:'dummy point for bottom parallel line'
+		}
+		let i={
+			x:POINTS['I'].x,
+			y:POINTS['I'].y
+		}
+		POINTS['I']=Intersection('DQ','9A','I')
+		let di=Length(i,POINTS['I'])
+console.log("Bottom left "+di)
+		return
+	}
+
+	let TOP_LINE=[ POINTS['C'], POINTS['H']]
+	let TOP_PLINE={
+		p1:TOP_LINE[0],
+		p2:TOP_LINE[1]
+	}
+
+	let BOT_LINE=[ POINTS['D'], POINTS['I']]
+	let BOT_PLINE={
+		p1:BOT_LINE[0],
+		p2:BOT_LINE[1]
+	}
+
+	interset= inteceptCircleLineSeg(CIRCLE, TOP_PLINE).filter(NotNearLine.bind(TOP_LINE))
+	POINTS['P']=interset[0]
+	POINTS['P'].source_tan=1-e
+	POINTS['P'].desc="natural base"
+
+	interset= inteceptCircleLineSeg(CIRCLE, BOT_PLINE).filter(NotNearLine.bind(BOT_LINE))
+console.log("INTERSET LENGTH="+interset.length)
+	POINTS['Q']=interset[0]
+	POINTS['Q'].source_tan=-e
+	POINTS['Q'].desc="e-1"
+}
+
+"CDEFPQ".split('').map(C=>{
+	let c=C.toLowerCase()
+if (DEBUG) console.log("GENNING FOR "+C+"="+[POINTS[C].x,POINTS[C].y])
+	POINTS[c]=MapOntoLine(POINTS['A'],POINTS['B'],POINTS[C].source_tan,c)
+	if (argv['a'])
+		POINTS[C]=POINTS[c]
+	Assert((name)=>10*LLength(C+c)/SCALE,0,"","","distance to acurate  "+POINTS[c].desc)
 })
+if (argv['a']){
+	generate_secondary(true)
+}
 
 
 let triangles="ACB,ADB,AEB,AFB,CFH,BAI,GFM,KFM,BNH,APB,AQB".split(/,/)
@@ -146,10 +194,12 @@ Assert(rf,B2,'ADB','invtan',"Brun's constant2")
 
 Assert( ()=>{return LLength("AE")/LLength("AF")},phi, "AE/AF","","Golden Ratio")
 Assert( ()=>{return LLength("AF")/LLength("AE")},phi-1, "AF/AE","","Golden Ratio Inverted")
-Assert( ()=>{return LLength("NH")/LLength("NF")},phi, "NH/NF","","Golden Ratio second")
-Assert( ()=>{return LLength("NH")/LLength("NF")},phi, "NH/NF","","Golden Ratio second")
 Assert( ()=>{return (LLength("AB")+LLength("AE"))/LLength("AD")},tri, "AC/AD","","Tribonacci")
-Assert( ()=>{return (LLength("BE")+LLength("BF"))/LLength("AB")},root3, "(BE+BD)/AB","","root3")
+Assert( ()=>{return (LLength("BE")+LLength("BF"))/LLength("AB")},root3, "(BE+BD)/AB","","Root 3")
+Assert( ()=>{return LLength("NH")/LLength("NF")},phi, "NH/NF","","Golden Ratio second")
+Assert( ()=>{return (LLength("NF") + LLength('AI'))/LLength("AH")},root2, "NH/AI","","Root 2")
+Assert( ()=>{return LLength('AB')/LLength("AI")},root5, "AB/AI","","Root 5")
+Assert( ()=>{return LLength('BI')/LLength("AI")},root6, "BI/AI","","Root 6")
 Assert( rf,0.75,'AEB','invtan',"345 Triangle")
 Assert( rf,e,'AQB','tan',"Euler")
 Assert( rf,e-1,'APB','tan',"Euler - 1")
@@ -164,17 +214,16 @@ Assert( rf,90,'APB','midangle',"Right angle")
 Assert( rf,90,'AQB','midangle',"Right angle")
 
 
-"ABCDEFPQO".split('').map(name=>{
+"ABCDEFPQ".split('').map(name=>{
 	Assert((name)=>LLength('M'+name),radius,name,""," Radius")
 })
-"ABCDEF".split('').map(name=>{
+if (DEBUG) "ABCDEF".split('').map(name=>{
 	Assert((name)=>LLength('O'+name),radius,name,""," Radius from P")
 })
 "U".split('').map(name=>{
 	Assert((name)=>LLength('N'+name)/SCALE,0,name,""," distance to derived AT interscetion ")
 })
-Assert((name)=>LLength('YZ'),0,"","","distance chi top left")
-Assert((name)=>LLength('X1'),0,"","","distance chi bottom right")
+//Assert((name)=>LLength('X1'),0,"","","distance chi bottom right")
 
 "RS".split('').map(name=>
 	Assert((name)=>distToSegment(POINTS[name],POINTS['F'],POINTS['B'])/SCALE,0,name,"", "FC to"))
@@ -209,6 +258,7 @@ function intersection(x1, y1, x2, y2, x3, y3, x4, y4)
     }
     ua = ((x4 - x3)*(y1 - y3) - (y4 - y3)*(x1 - x3))/denom;
     ub = ((x2 - x1)*(y1 - y3) - (y2 - y1)*(x1 - x3))/denom;
+if (DEBUG)console.log("INTERSECTION "+[x1,y1,x2,y2,x3,y3,x4,y4,denom,ua,ub])
     return {
         x: x1 + ua * (x2 - x1),
         y: y1 + ua * (y2 - y1),
@@ -282,10 +332,11 @@ function Process(triangle){
 }
 
 function Length(a,b){
-	return Math.sqrt(
-		Math.pow(a.x-b.x,2)+
-		Math.pow(a.y-b.y,2)
-	)
+	let x2=Math.pow(a.x-b.x,2)
+	let y2=Math.pow(a.y-b.y,2)
+	let d= Math.sqrt(x2+y2)
+if (DEBUG) console.log("LENGTH "+[a.x,a.y,b.x,b.y,x2,y2,d])
+	return d
 }
 
 
@@ -388,7 +439,8 @@ if (DEBUG)console.log("SCALE "+scale)
 	
 	let transformed={
 		x:a.x+(cos*scale),
-		y:a.y
+		y:a.y,
+		source_tan:tan
 	}
 if (DEBUG)console.log("TRANSFORM "+[transformed.x,transformed.y])
 	
