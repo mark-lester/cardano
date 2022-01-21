@@ -40,7 +40,7 @@ let data=[
 //   ["A", "G dot", 4330, 4086],
 //   ["A", "G dot", 4347, 4070],
    ["A", "G dot", 4330, 4086],
-   ["B", "imprinted dot", 5749, 2526],
+   ["B", "Imprinted dot", 5749, 2526],
    ["C", "top line right", 6070, 3082,1/pi],
    ["D", "bottom line right", 6080, 3448,1/B2],
    ["E", "Aspley dot", 5598, 4226,4/3],
@@ -57,10 +57,11 @@ let data=[
    ["S", "T-square bottom", 5165, 4098],
    ["T", "AT LONDON A top", 4582, 3820],
    ["U", "AT LONDON A bottom", 4612, 3908],
-   ["V", "AT LONDON D top", 5108, 3828],
-   ["W", "AT LONDON D bottom", 5111, 3894],
+   ["V", "AT LONDON D top", 5038, 3820],
+   ["W", "AT LONDON D bottom", 5040, 3824],
    ["Z", "between u and e", 4359, 2499],
    ["1", "between e and r", 5810, 4029],
+   ["j", "I Imprinted bottom", 5080, 2526],
 ]
 
 data=data.map(line=>{
@@ -225,12 +226,40 @@ if (DEBUG) "ABCDEF".split('').map(name=>{
 })
 //Assert((name)=>LLength('X1'),0,"","","distance chi bottom right")
 
-"RS".split('').map(name=>
-	Assert((name)=>distToSegment(POINTS[name],POINTS['F'],POINTS['B'])/SCALE,0,name,"", "FC to"))
-"TU".split('').map(name=>
-	Assert((name)=>distToSegment(POINTS[name],POINTS['F'],POINTS['H'])/SCALE,0,name,"", "FH to"))
-"VW".split('').map(name=>
-	Assert((name)=>distToSegment(POINTS[name],POINTS['F'],POINTS['K'])/SCALE,0,name,"", "FK to"))
+"RS:FB,TU:FH,VWMj:FK".split(',').map(job=>{
+	let j=job.split(':')
+	let l=j[1].split('')
+	j[0].split('').map(name=>{
+		Assert((name)=>distToSegment(POINTS[name],POINTS[l[0]],POINTS[l[1]])/SCALE,0,name,"", j[1]+" to "+POINTS[name].desc)
+	})
+})
+
+"CH:DI,FH:AI,AB:ED".split(',').map(pair=>{
+	let p=pair.split(':')
+	CheckParallel(p[0],p[1])
+})
+
+function CheckParallel(a,b){
+	let angle=degs(Math.atan(Slope(a)-Slope(b)))
+	console.log("Parallel check "+nicename(a)+"||"+nicename(b)+"="+angle)
+}
+
+function nicename(line){
+	let l=line.split('')
+	let a=POINTS[l[0]]
+	let b=POINTS[l[1]]
+	return "("+l[0]+")"+a.desc+"/("+l[1]+")"+b.desc
+}
+
+function Slope(line){
+	let l=line.split('')
+	let a=POINTS[l[0]]
+	let b=POINTS[l[1]]
+	return slope(a,b)
+}
+function slope(a,b){
+	return (a.y-b.y)/(a.x-b.x)
+}
 
 function NotNearLine(point){
 	return this.filter(NearPoint.bind(point)).length == 0
