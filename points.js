@@ -25,26 +25,13 @@ console.log("e-1 "+(e-1))
 console.log("B2 "+B2)
 
 const Sum = (accumulator, curr) => accumulator + curr;
-const ACURATE={
-	C:[6070,3082],
-	D:[6080,3448],
-	E:[5598,4226],
-	F:[5075,4362],
-}
-
-
-//   ["A", "G dot", 4349, 4085], //   ["A", "G dot", 4305, 4085],
 const RAD2DEG=180/pi
 let data=[
-//   ["A", "G dot", 4324, 4063],
-//   ["A", "G dot", 4330, 4086],
-//   ["A", "G dot", 4347, 4070],
    ["A", "G dot", 4330, 4086],
    ["B", "Imprinted dot", 5749, 2526],
    ["C", "top line right", 6070, 3082,1/pi],
    ["D", "bottom line right", 6080, 3448,1/B2],
    ["E", "Aspley dot", 5598, 4226,4/3],
-//   ["E", "Aspley dot", 5570, 4243],
    ["F", "9 dot",5075, 4362,1/Math.tan(Math.asin(0.6/phi))],
    ["G", "Tau dot", 5056, 4084],
    ["H", "top line left", 3640, 3062],
@@ -91,6 +78,7 @@ const THRESHOLD=50
 		
 generate()
 generate_secondary()
+
 function generate(){
 	POINTS['M']=MidPoint('AB','M')
 	POINTS['N']=Intersection('FH','AB','N')
@@ -98,7 +86,6 @@ function generate(){
 	POINTS['X']=rotate(POINTS['M'],POINTS['A'],90,'X','"are" bottom right Chi' )
 	POINTS['Y']=rotate(POINTS['M'],POINTS['B'],90,'Y','Neuer, top left Chi')
 }
-
 function generate_secondary(derived){
 	let CIRCLE={
 		center:POINTS['M'],
@@ -120,6 +107,8 @@ function generate_secondary(derived){
 		POINTS['H']=Intersection('CP','F8','H')
 		let dh=Length(h,POINTS['H'])
 console.log("Top left "+dh)
+		deltay=POINTS['F'].x -POINTS['C'].x 
+		deltax=-POINTS['F'].y +POINTS['C'].y 
 
 		POINTS['9']={
 			x:POINTS['A'].x+deltax,
@@ -153,12 +142,14 @@ console.log("Bottom left "+di)
 	POINTS['P']=interset[0]
 	POINTS['P'].source_tan=1-e
 	POINTS['P'].desc="natural base"
+	POINTS['P'].name="P"
 
 	interset= inteceptCircleLineSeg(CIRCLE, BOT_PLINE).filter(NotNearLine.bind(BOT_LINE))
 console.log("INTERSET LENGTH="+interset.length)
 	POINTS['Q']=interset[0]
 	POINTS['Q'].source_tan=-e
 	POINTS['Q'].desc="e-1"
+	POINTS['Q'].name="Q"
 }
 
 "CDEFPQ".split('').map(C=>{
@@ -238,6 +229,32 @@ if (DEBUG) "ABCDEF".split('').map(name=>{
 	let p=pair.split(':')
 	CheckParallel(p[0],p[1])
 })
+
+if (argv['o'])
+	dumplines(argv['o'])
+
+function dumplines(filename){
+	let lines="AB,XY,AC,BC,AD,BD,AE,BE,AF,BF,AP,BP,AQ,BQ,AI,FH,FL"
+	let output=[]
+	lines.split(',').map(getpoints).map(line=>output=output.concat(line))
+	fs.writeFileSync(filename,toCSV(output))
+}
+function toCSV(square_array){
+	return square_array.map(line=>line.join(',')).join("\n")+"\n"
+}
+		
+function getpoints(line){
+	return line.split('').map(n=>POINTS[n]).map(P=>[
+		line,
+		line,
+		P.x,
+		P.y,
+		P.x,
+		P.y,
+		P.x,
+		P.y
+	])
+}
 
 function CheckParallel(a,b){
 	let angle=degs(Math.atan(Slope(a)-Slope(b)))
