@@ -28,7 +28,7 @@ const Sum = (accumulator, curr) => accumulator + curr;
 const RAD2DEG=180/pi
 let data=[
    ["A", "G dot", 4330, 4086],
-   ["B", "Imprinted dot", 5749, 2526],
+   ["B", "Imprinted dot", 5752, 2525],
    ["C", "top line right", 6070, 3082,1/pi],
    ["D", "bottom line right", 6080, 3448,1/B2],
    ["E", "Aspley dot", 5598, 4226,4/3],
@@ -36,7 +36,7 @@ let data=[
    ["G", "Tau dot", 5056, 4084],
    ["H", "top line left", 3640, 3062],
    ["I", "bottom line left", 3654, 3446],
-   ["J", "T square dot", 5170, 4189],
+   ["J", "T square dot", 5285, 4086],
    ["K", "P bottom", 5012, 1365],
    ["L", "P top", 5018, 1130],
 // others below beware
@@ -81,10 +81,24 @@ generate_secondary()
 
 function generate(){
 	POINTS['M']=MidPoint('AB','M')
+	let dx=POINTS['B'].x - POINTS['A'].x
+	POINTS['X']={
+		x:POINTS['A'].x+dx,
+		y:POINTS['A'].y,
+		name:'X',
+		desc:'reflected diameter bottom'
+	}
+	POINTS['Y']={
+		x:POINTS['B'].x-dx,
+		y:POINTS['B'].y,
+		name:'Y',
+		desc:'reflected diameter top'
+	}
+
 	POINTS['N']=Intersection('FH','AB','N')
 	POINTS['O']=Intersection('KF','AB','O')
-	POINTS['X']=rotate(POINTS['M'],POINTS['A'],90,'X','"are" bottom right Chi' )
-	POINTS['Y']=rotate(POINTS['M'],POINTS['B'],90,'Y','Neuer, top left Chi')
+//	POINTS['X']=rotate(POINTS['M'],POINTS['A'],90,'X','"are" bottom right Chi' )
+//	POINTS['Y']=rotate(POINTS['M'],POINTS['B'],90,'Y','Neuer, top left Chi')
 }
 function generate_secondary(derived){
 	let CIRCLE={
@@ -107,8 +121,8 @@ function generate_secondary(derived){
 		POINTS['H']=Intersection('CP','F8','H')
 		let dh=Length(h,POINTS['H'])
 console.log("Top left "+dh)
-		deltay=POINTS['F'].x -POINTS['C'].x 
-		deltax=-POINTS['F'].y +POINTS['C'].y 
+//		deltay=POINTS['F'].x -POINTS['C'].x 
+//		deltax=-POINTS['F'].y +POINTS['C'].y 
 
 		POINTS['9']={
 			x:POINTS['A'].x+deltax,
@@ -150,6 +164,18 @@ console.log("INTERSET LENGTH="+interset.length)
 	POINTS['Q'].source_tan=-e
 	POINTS['Q'].desc="e-1"
 	POINTS['Q'].name="Q"
+
+	let A=POINTS['A']
+	let J=POINTS['J']
+	let dx=J.x-A.x
+	let dy=J.y-A.y
+	POINTS['%']={
+		x:A.x-dx,
+		y:A.y-dy,
+		name:'%',
+		desc:"Dee baseline left"
+	}
+	POINTS['@']=Intersection('AJ','XY','@')
 }
 
 "CDEFPQ".split('').map(C=>{
@@ -229,12 +255,16 @@ if (DEBUG) "ABCDEF".split('').map(name=>{
 	let p=pair.split(':')
 	CheckParallel(p[0],p[1])
 })
+let p345=[]
+"ABE".split('').map(p=>POINTS[p]).map(p=>{p345.push(p.x);p345.push(p.y) })
+console.log("points=["+p345.join(',')+"]")
+console.log("pdb.circleCenterFromPoints(points)")
 
 if (argv['o'])
 	dumplines(argv['o'])
 
 function dumplines(filename){
-	let lines="AB,XY,AC,BC,AD,BD,AE,BE,AF,BF,AP,BP,AQ,BQ,AI,FH,FL"
+	let lines="AB,XY,AC,BC,AD,BD,AE,BE,AF,BF,AP,BP,AQ,BQ,AI,FH,FL,HC,ID,FC,@A"
 	let output=[]
 	lines.split(',').map(getpoints).map(line=>output=output.concat(line))
 	fs.writeFileSync(filename,toCSV(output))
@@ -449,9 +479,22 @@ function distToSegment(p, v, w) { return Math.sqrt(distToSegmentSquared(p, v, w)
 
 function rotate(c,p, angle,name,desc) {
 	let radians = (Math.PI / 180) * angle
+console.log("ROTATE "+(radians/Math.PI))
 	return Rotate(c,p,radians,name,desc)
 }
+
 function Rotate(c,p, radians,name,desc) {
+	let cos = Math.cos(radians)
+	let sin = Math.sin(radians)
+if (DEBUG)console.log("ROTATING "+[c.x,c.y,p.x,p.y,radians,name,desc,sin,cos])
+	return {
+		x:(cos * (p.x - c.x)) + (sin * (p.y - c.y)) + c.x,
+		y:(cos * (p.y - c.y)) - (sin * (p.x - c.x)) + c.y,
+		name:name,
+		desc:desc
+	}
+}
+function FRotate(c,p, radians,name,desc) {
 	let cos = Math.cos(radians)
 	let sin = Math.sin(radians)
 if (DEBUG)console.log("ROTATING "+[c.x,c.y,p.x,p.y,radians,name,desc,sin,cos])
@@ -490,7 +533,7 @@ if (DEBUG)console.log("SCALE "+scale)
 	}
 if (DEBUG)console.log("TRANSFORM "+[transformed.x,transformed.y])
 	
-	let out= Rotate(a,transformed,rangle,name,name+" generated from source tangent")
+	let out= FRotate(a,transformed,rangle,name,name+" generated from source tangent")
 if (DEBUG)console.log("OUT "+[out.x,out.y])
 	return out
 }
