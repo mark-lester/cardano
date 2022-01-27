@@ -11,9 +11,9 @@ const root3=Math.sqrt(3)
 const root5=Math.sqrt(5)
 const root6=Math.sqrt(6)
 const gamma=0.5772156649
-const e=2.71828
-const B2=1.902160
-const tri=1.8392867
+const e=2.718281828459
+const B2=1.902160583104
+const tri=1.8392867755214
 let POINTS={}
 
 console.log("PI "+pi)
@@ -27,29 +27,33 @@ console.log("B2 "+B2)
 const Sum = (accumulator, curr) => accumulator + curr;
 const RAD2DEG=180/pi
 let data=[
-   ["A", "G dot", 4330, 4086],
-   ["B", "Imprinted dot", 5752, 2525],
-   ["C", "top line right", 6070, 3082,1/pi],
-   ["D", "bottom line right", 6080, 3448,1/B2],
-   ["E", "Aspley dot", 5598, 4226,4/3],
-   ["F", "9 dot",5075, 4362,1/Math.tan(Math.asin(0.6/phi))],
-   ["G", "Tau dot", 5056, 4084],
-   ["H", "top line left", 3640, 3062],
-   ["I", "bottom line left", 3654, 3446],
-   ["J", "T square dot", 5285, 4086],
-   ["K", "P bottom", 5012, 1365],
-   ["L", "P top", 5018, 1130],
+//1003,3850
+   ["A", "G dot", 906, 3905],
+   ["B", "Imprinted dot", 2326, 2343],
+   //["B", "Imprinted dot", 2314, 2343],
+   ["C", "top line right", 2648, 2903,1/pi],
+   ["D", "bottom line right", 2668, 3272,1/B2],
+   ["E", "Aspley dot", 2160, 4051,4/3],
+   ["F", "9 dot",1649, 4180,1/Math.tan(Math.asin(0.6/phi))],
+   ["G", "Tau dot", 1634, 3906],
+   ["H", "top line left", 243, 2885],
+   ["I", "bottom line left", 220, 3264],
+   ["J", "T square dot", 1860, 3904],
+   ["K", "P bottom", 1568, 1192],
+   ["L", "P top", 1569, 956],
 // others below beware
-   ["R", "T-square top", 5207,3986],
-   ["S", "T-square bottom", 5165, 4098],
-   ["T", "AT LONDON A top", 4582, 3820],
-   ["U", "AT LONDON A bottom", 4612, 3908],
-   ["V", "AT LONDON D top", 5038, 3820],
-   ["W", "AT LONDON D bottom", 5040, 3824],
-   ["Z", "between u and e", 4359, 2499],
-   ["1", "between e and r", 5810, 4029],
-   ["j", "I Imprinted bottom", 5080, 2526],
+   ["R", "T-square top", 1797,3790],
+   ["S", "T-square bottom", 1769, 3919],
+   ["T", "AT LONDON A top", 1070, 3636],
+   ["U", "AT LONDON A bottom", 1101, 3722],
+   ["V", "AT LONDON D top", 1618, 3686],
+   ["W", "AT LONDON D bottom", 1618, 3719],
+   ["Z", "bottom of u", 908, 2344],
+   ["1", "start of re", 2335, 3911],
+   ["j", "I Imprinted bottom", 1660, 2350],
 ]
+
+
 
 data=data.map(line=>{
 	return {
@@ -73,7 +77,8 @@ if (argv['a'])
 	})
 */
 let alans_measure=35.95
-let SCALE=LLength('AC')/alans_measure
+let SCALE=LLength('AB')/alans_measure
+console.log("Pixel length="+SCALE)
 const THRESHOLD=50
 		
 generate()
@@ -97,6 +102,25 @@ function generate(){
 
 	POINTS['N']=Intersection('FH','AB','N')
 	POINTS['O']=Intersection('KF','AB','O')
+	POINTS['+']={
+		x:POINTS['A'].x+90,
+		y:POINTS['A'].y-40,
+		name:'+',
+		desc:'delta left',
+	}
+	POINTS['-']={
+		x:POINTS['X'].x-90,
+		y:POINTS['X'].y-40,
+		name:'-',
+		desc:'delta right',
+	}
+	POINTS['^']={
+		x:POINTS['M'].x,
+		y:POINTS['M'].y+75,
+		name:'^',
+		desc:'delta top',
+	}
+
 //	POINTS['X']=rotate(POINTS['M'],POINTS['A'],90,'X','"are" bottom right Chi' )
 //	POINTS['Y']=rotate(POINTS['M'],POINTS['B'],90,'Y','Neuer, top left Chi')
 }
@@ -176,19 +200,61 @@ console.log("INTERSET LENGTH="+interset.length)
 		desc:"Dee baseline left"
 	}
 	POINTS['@']=Intersection('AJ','XY','@')
+	let CHI_LINE=[POINTS['F'],POINTS['L']]
+	let CHI_PLINE={
+		p1:CHI_LINE[0],
+		p2:CHI_LINE[1]
+	}
+	interset= inteceptCircleLineSeg(CIRCLE, CHI_PLINE).filter(NotNearLine.bind(CHI_LINE))
+	POINTS['$']=interset[0]
+	POINTS['$'].desc="top of circle"
+	POINTS['$'].name="Q"
+}
+
+function calculate_brun(){
+	let CIRCLE={
+		center:POINTS['M'],
+		radius:LLength('AB')/2
+	}
+console.log("POINTS[P]="+POINTS['p'].x+","+POINTS['p'].y)
+console.log("POINTS[Q]="+POINTS['q'].x+","+POINTS['q'].y)
+console.log("POINTS[C]="+POINTS['c'].x+","+POINTS['c'].y)
+	deltax=POINTS['c'].x - POINTS['p'].x
+	deltay=POINTS['c'].y - POINTS['p'].y
+	deltax*=2
+	deltay*=2
+	POINTS[';']={
+		x:POINTS['q'].x + deltax,
+		y:POINTS['q'].y + deltay
+	}
+console.log("DIFF "+deltax+","+deltay)
+console.log("POINTS[;]="+POINTS[';'].x+","+POINTS[';'].y)
+	points= inteceptCircleLineSeg(CIRCLE, {p1:POINTS['q'],p2:POINTS[';']})//.filter(NotNearLine.bind([POINTS['q'],POINTS[';']]))[0]
+console.log("POINTS LENGTH="+points.length)
+	POINTS[';']=points[1]
+console.log("POINTS[;]="+POINTS[';'].x+","+POINTS[';'].y)
+	let results=Process('A;B')
+	console.log("CALCULATED BRUN AS "+results.tan+ " OR "+results.invtan)
+	ac=(results.invtan-B2)
+	acp=ac*100/B2
+	console.log("ACURACY OF BRUN  "+ac + " -> "+acp)
 }
 
 "CDEFPQ".split('').map(C=>{
 	let c=C.toLowerCase()
 if (DEBUG) console.log("GENNING FOR "+C+"="+[POINTS[C].x,POINTS[C].y])
-	POINTS[c]=MapOntoLine(POINTS['A'],POINTS['B'],POINTS[C].source_tan,c)
+	if (POINTS[C].source_tan)
+		POINTS[c]=MapOntoLine(POINTS['A'],POINTS['B'],POINTS[C].source_tan,c)
 	if (argv['a'])
 		POINTS[C]=POINTS[c]
 	Assert((name)=>10*LLength(C+c)/SCALE,0,"","","distance to acurate  "+POINTS[c].desc)
 })
+
+
 if (argv['a']){
 	generate_secondary(true)
 }
+calculate_brun()
 
 
 let triangles="ACB,ADB,AEB,AFB,CFH,BAI,GFM,KFM,BNH,APB,AQB".split(/,/)
@@ -210,6 +276,8 @@ rf=(n,f)=>results[n][f]
 Assert(rf,pi,'ACB','invtan',"Pi")
 Assert(rf,B2,'ADB','invtan',"Brun's constant2")
 
+Assert( ()=>{return LLength("EB")/LLength("AB")},4/5, "AB/EB","","4 of 345")
+Assert( ()=>{return LLength("EA")/LLength("AB")},3/5, "AB/EA","","3 of 345")
 Assert( ()=>{return LLength("AE")/LLength("AF")},phi, "AE/AF","","Golden Ratio")
 Assert( ()=>{return LLength("AF")/LLength("AE")},phi-1, "AF/AE","","Golden Ratio Inverted")
 Assert( ()=>{return (LLength("AB")+LLength("AE"))/LLength("AD")},tri, "AC/AD","","Tribonacci")
@@ -243,7 +311,7 @@ if (DEBUG) "ABCDEF".split('').map(name=>{
 })
 //Assert((name)=>LLength('X1'),0,"","","distance chi bottom right")
 
-"RS:FB,TU:FH,VWMj:FK".split(',').map(job=>{
+"RS:FB,TU:FH,VWMj:FK,MG:FL".split(',').map(job=>{
 	let j=job.split(':')
 	let l=j[1].split('')
 	j[0].split('').map(name=>{
@@ -255,16 +323,18 @@ if (DEBUG) "ABCDEF".split('').map(name=>{
 	let p=pair.split(':')
 	CheckParallel(p[0],p[1])
 })
-let p345=[]
-"ABE".split('').map(p=>POINTS[p]).map(p=>{p345.push(p.x);p345.push(p.y) })
-console.log("points=["+p345.join(',')+"]")
-console.log("pdb.circleCenterFromPoints(points)")
+let p345="ABE".split('').map(p=>POINTS[p]).map(p=>[p.x,p.y])
+console.log("points=["+p345.map(p=>"["+p.join(',')+"]")+"]")
+
+console.log("RATIO OF TAU DOT TO TOP AND BOTTOM="+(LLength('GF')/LLength('G$')))
 
 if (argv['o'])
 	dumplines(argv['o'])
 
 function dumplines(filename){
 	let lines="AB,XY,AC,BC,AD,BD,AE,BE,AF,BF,AP,BP,AQ,BQ,AI,FH,FL,HC,ID,FC,@A"
+	if (argv['Z'])
+		lines+=",+-,+^,^-"
 	let output=[]
 	lines.split(',').map(getpoints).map(line=>output=output.concat(line))
 	fs.writeFileSync(filename,toCSV(output))
